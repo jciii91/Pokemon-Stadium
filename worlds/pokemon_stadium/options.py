@@ -1,4 +1,4 @@
-from Options import Choice, Toggle
+from Options import Choice, OptionGroup, StartInventory, Toggle
 
 class Goal(Choice):
     """
@@ -10,6 +10,13 @@ class Goal(Choice):
     default = 0
     option_castle = 0
 
+class PokemonStadiumStartInventory(StartInventory):
+    """
+    Start with these items.
+
+    These will be the available rentals for the Cups and Gym Leader Castle.
+    """
+
 class RemoteItems(Toggle):
     """
     Instead of placing your own items directly into the ROM, all items are received from the server, including items you find for yourself.
@@ -19,3 +26,11 @@ class RemoteItems(Toggle):
     But it changes pickup behavior slightly and requires connection to the server to receive any items.
     """
     display_name = "Remote Items"
+
+OPTION_GROUPS = [
+    OptionGroup(
+        "Item & Location Options", [
+            PokemonStadiumStartInventory,
+        ], True,
+    ),
+]
