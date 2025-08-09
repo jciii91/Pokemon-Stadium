@@ -38,7 +38,8 @@ class PokemonStadiumWorld(World):
         super().__init__(multiworld, player)
 
     def generate_early(self):
-        self.multiworld.push_precollected()
+        # self.multiworld.push_precollected()
+        pass
 
     def create_regions(self):
         create_regions(self)
@@ -52,8 +53,8 @@ class PokemonStadiumWorld(World):
     def fill_slot_data(self) -> Dict[str, object]:
         slot_data: Dict[str, object] = {
             "options": {
-                "StartingGyms":         self.options.VictoryCondition.value,
-                "StartingCups":         self.options.GymCastleTrainerRandomness.value,
+                "VictoryCondition":             self.options.VictoryCondition.value,
+                # "GymCastleTrainerRandomness":   self.options.GymCastleTrainerRandomness.value,
             },
             "Seed": self.multiworld.seed_name,  # to verify the server's multiworld
             "Slot": self.multiworld.player_name[self.player],  # to connect to server

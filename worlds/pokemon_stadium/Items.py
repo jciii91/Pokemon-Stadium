@@ -10,16 +10,20 @@ if TYPE_CHECKING:
     from . import PokemonStadiumWorld
 
 def create_itempool(world: 'PokemonStadiumWorld') -> List[Item]:
-    itempool: List[Item] = []
+    item_pool: List[Item] = []
 
     # This is a good place to grab anything you need from options
+
+    for name in pokemon_stadium_items:
+        if name != 'Victory':
+            item_pool.append(create_item(world, name))
 
     victory = create_item(world, 'Victory')
     world.multiworld.get_location('Beat Rival', world.player).place_locked_item(victory)
 
-    itempool += create_junk_items(world, get_total_locations(world) - len(itempool) - 1)
+    item_pool += create_junk_items(world, get_total_locations(world) - len(item_pool) - 1)
 
-    return itempool
+    return item_pool
 
 def create_item(world: 'PokemonStadiumWorld', name: str) -> Item:
     data = item_table[name]
@@ -68,7 +72,6 @@ pokemon_stadium_items = {
     'Earth Badge': ItemData(10000016, ItemClassification.progression),
 
     # Useful items
-    "A good friend": ItemData(20050004, ItemClassification.useful),
 
     # Victory is added here since in this organization it needs to be in the default item pool
     'Victory': ItemData(10000000, ItemClassification.progression)
