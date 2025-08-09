@@ -1,36 +1,46 @@
-from Options import Choice, OptionGroup, StartInventory, Toggle
+from typing import List, Dict, Any
+from dataclasses import dataclass
+from worlds.AutoWorld import PerGameCommonOptions
+from Options import Choice, OptionGroup, Toggle, Range
 
-class Goal(Choice):
+def create_option_groups() -> List[OptionGroup]:
+    option_group_list: List[OptionGroup] = []
+    for name, options in pokemon_stadium_option_groups.items():
+        option_group_list.append(OptionGroup(name=name, options=options))
+
+    return option_group_list
+
+class VictoryCondition(Choice):
     """
-    Determines what your goal is to consider the game beaten.
-
-    - Castle: Clear Gym Leader Castle by defeating Gary
+    Choose victory condition
     """
-    display_name = "Goal"
-    default = 0
-    option_castle = 0
+    display_name = "Victory Condition"
+    option_defeat_rival = 1
+    option_clear_master_ball_cup = 2
+    default = 1
 
-class PokemonStadiumStartInventory(StartInventory):
+class GymCastleTrainerRandomness(Choice):
     """
-    Start with these items.
-
-    These will be the available rentals for the Cups and Gym Leader Castle.
+    Controls the level of randomness for the enemy teams in Gym Leader Castle.
+    Vanilla - No change
+    Low - Stats are fairly even in distribution. Moveset has a status, STAB, and higher attack stat aligned move. (4th move is fully random)
+    Medium - No extreme stat distributions. Moveset has a STAB, and higher attack stat aligned move. (3rd and 4th moves are fully random)
+    High - All stat distributions possible. Moveset has a higher attack stat aligned move. (all other moves are fully random)
     """
+    display_name = "Gym Castle Trainer Randomness"
+    option_vanilla = 1
+    option_low = 2
+    option_medium = 3
+    option_high = 4
+    default = 1
 
-class RemoteItems(Toggle):
-    """
-    Instead of placing your own items directly into the ROM, all items are received from the server, including items you find for yourself.
+@dataclass
+class PokemonStadiumOptions(PerGameCommonOptions):
+    VictoryCondition:   VictoryCondition
+    ExtraLocations:     GymCastleTrainerRandomness
 
-    This enables co-op of a single slot and recovering more items after a lost save file (if you're so unlucky).
-
-    But it changes pickup behavior slightly and requires connection to the server to receive any items.
-    """
-    display_name = "Remote Items"
-
-OPTION_GROUPS = [
-    OptionGroup(
-        "Item & Location Options", [
-            PokemonStadiumStartInventory,
-        ], True,
-    ),
-]
+# This is where you organize your options
+# Its entirely up to you how you want to organize it
+pokemon_stadium_option_groups: Dict[str, List[Any]] = {
+    "General Options": [VictoryCondition, GymCastleTrainerRandomness],
+}
