@@ -73,7 +73,14 @@ pokemon_stadium_items = {
     'Earth Badge': ItemData(10000016, ItemClassification.progression),
 
     # Useful items
-
+    'GLC PC Box Upgrade': ItemData(10000017, ItemClassification.useful),
+    'GLC PC Box Upgrade': ItemData(10000018, ItemClassification.useful),
+    'GLC PC Box Upgrade': ItemData(10000019, ItemClassification.useful),
+    'GLC PC Box Upgrade': ItemData(10000020, ItemClassification.useful),
+    'GLC PC Box Upgrade': ItemData(10000021, ItemClassification.useful),
+    'GLC PC Box Upgrade': ItemData(10000022, ItemClassification.useful),
+    'GLC PC Box Upgrade': ItemData(10000023, ItemClassification.useful),
+    'GLC PC Box Upgrade': ItemData(10000024, ItemClassification.useful),
     # Victory is added here since in this organization it needs to be in the default item pool
     'Victory': ItemData(10000000, ItemClassification.progression)
 }

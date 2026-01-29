@@ -44,7 +44,7 @@ class PokemonStadiumClient(BizHawkClient):
 
     async def game_watcher(self, ctx: 'BizHawkClientContext') -> None:
         item_codes = {net_item.item for net_item in ctx.items_received}
-
+        
         flags = await bizhawk.read(ctx.bizhawk_ctx, [
                 (0x420000, 4, 'RDRAM'), # GLC Flag
                 (0x420010, 4, 'RDRAM'), # Entered Battle Flag
@@ -61,6 +61,37 @@ class PokemonStadiumClient(BizHawkClient):
         battle_info = await bizhawk.read(ctx.bizhawk_ctx, [(0x0AE540, 4, 'RDRAM')])
         gym_info = battle_info[0].hex()[4:]
 
+        PC_codes = [
+                pokemon_stadium_items['GLC PC Box 1'].ap_code,
+                pokemon_stadium_items['GLC PC Box 2'].ap_code,
+                pokemon_stadium_items['GLC PC Box 3'].ap_code,
+                pokemon_stadium_items['GLC PC Box 4'].ap_code,
+                pokemon_stadium_items['GLC PC Box 5'].ap_code,
+                pokemon_stadium_items['GLC PC Box 6'].ap_code,
+                pokemon_stadium_items['GLC PC Box 7'].ap_code,
+            ]
+
+        for code in enumerate(PC_codes):
+            if code in item_codes:
+                current_glc_boxes +=1
+        #Loads rentals based on how many PC box upgrades have been obtained
+        if(current_glc_boxes == 0):
+            await bizhawk.write(ctx.bizhawk_ctx, [(0x220E23, [0x09], 'RDRAM')])
+        elif(current_glc_boxes == 1):
+            await bizhawk.write(ctx.bizhawk_ctx, [(0x220E23, [0x1D], 'RDRAM')])
+        elif(current_glc_boxes == 2):
+            await bizhawk.write(ctx.bizhawk_ctx, [(0x220E23, [0x31], 'RDRAM')])
+        elif(current_glc_boxes == 3):
+            await bizhawk.write(ctx.bizhawk_ctx, [(0x220E23, [0x45], 'RDRAM')])
+        elif(current_glc_boxes == 4):
+            await bizhawk.write(ctx.bizhawk_ctx, [(0x220E23, [0x59], 'RDRAM')])
+        elif(current_glc_boxes == 5):
+            await bizhawk.write(ctx.bizhawk_ctx, [(0x220E23, [0x6D], 'RDRAM')])
+        elif(current_glc_boxes == 6):
+            await bizhawk.write(ctx.bizhawk_ctx, [(0x220E23, [0x81], 'RDRAM')])
+        elif(current_glc_boxes == 7):
+            await bizhawk.write(ctx.bizhawk_ctx, [(0x220E23, [0x95], 'RDRAM')])
+                
         if player_has_battled:
             player_won = all(x == b'\x00' for x in flags[5:8])
 
