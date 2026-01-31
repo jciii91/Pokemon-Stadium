@@ -1,6 +1,6 @@
 from BaseClasses import Region
 from .Types import PokemonStadiumLocation
-from .Locations import location_table, is_valid_location
+from .Locations import location_table, trainersanity_locations, is_valid_location
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -22,6 +22,9 @@ def create_regions(world: "PokemonStadiumWorld"):
 
 def create_region(world: "PokemonStadiumWorld", name: str) -> Region:
     reg = Region(name, world.player, world.multiworld)
+
+    if world.options.Trainersanity.value == 1:
+        location_table.update(trainersanity_locations)
 
     for (key, data) in location_table.items():
         if data.region == name:

@@ -66,12 +66,22 @@ class BaseStatTotalRandomness(Choice):
     option_high = 4
     default = 1
 
+class Trainersanity(Toggle):
+    """
+    Toggle on to make all Trainers into checks. This option is off by default.
+    """
+    display_name = 'Trainersanity'
+    option_off = 0
+    option_on = 1
+    default = 0
+
 @dataclass
 class PokemonStadiumOptions(PerGameCommonOptions):
     VictoryCondition:           VictoryCondition
     GymCastleTrainerRandomness: GymCastleTrainerRandomness
     GymCastleRentalRandomness:  GymCastleRentalRandomness
     BaseStatTotalRandomness:    BaseStatTotalRandomness
+    Trainersanity:              Trainersanity
 
 # This is where you organize your options
 # Its entirely up to you how you want to organize it
@@ -81,5 +91,6 @@ pokemon_stadium_option_groups: Dict[str, List[Any]] = {
         BaseStatTotalRandomness,
         GymCastleRentalRandomness,
         GymCastleTrainerRandomness,
+        Trainersanity,
     ],
 }

@@ -1,7 +1,7 @@
 import logging
 from typing import TYPE_CHECKING
 
-from .Items import pokemon_stadium_items, gym_badge_codes
+from .Items import pokemon_stadium_items, gym_badge_codes, box_upgrade_items
 from .Locations import pokemon_stadium_locations, event_locations
 from NetUtils import ClientStatus
 from .Types import LocData
@@ -44,7 +44,7 @@ class PokemonStadiumClient(BizHawkClient):
 
     async def game_watcher(self, ctx: 'BizHawkClientContext') -> None:
         item_codes = {net_item.item for net_item in ctx.items_received}
-        
+
         flags = await bizhawk.read(ctx.bizhawk_ctx, [
                 (0x420000, 4, 'RDRAM'), # GLC Flag
                 (0x420010, 4, 'RDRAM'), # Entered Battle Flag
@@ -54,43 +54,13 @@ class PokemonStadiumClient(BizHawkClient):
                 (0xAE77F, 1, 'RDRAM'), # Enemy team HP slot 1
                 (0xAE7D3, 1, 'RDRAM'), # Enemy team HP slot 2
                 (0xAE827, 1, 'RDRAM'), # Enemy team HP slot 3
+                (0x220C19, 3, 'RDRAM'), # GLC Rentals address
             ]
         )
 
         player_has_battled = flags[1] != b'\x00\x00\x00\x00'
         battle_info = await bizhawk.read(ctx.bizhawk_ctx, [(0x0AE540, 4, 'RDRAM')])
         gym_info = battle_info[0].hex()[4:]
-
-        PC_codes = [
-                pokemon_stadium_items['GLC PC Box 1'].ap_code,
-                pokemon_stadium_items['GLC PC Box 2'].ap_code,
-                pokemon_stadium_items['GLC PC Box 3'].ap_code,
-                pokemon_stadium_items['GLC PC Box 4'].ap_code,
-                pokemon_stadium_items['GLC PC Box 5'].ap_code,
-                pokemon_stadium_items['GLC PC Box 6'].ap_code,
-                pokemon_stadium_items['GLC PC Box 7'].ap_code,
-            ]
-
-        for code in enumerate(PC_codes):
-            if code in item_codes:
-                current_glc_boxes +=1
-        #Loads rentals based on how many PC box upgrades have been obtained
-        if(current_glc_boxes == 0):
-            await bizhawk.write(ctx.bizhawk_ctx, [(0x220E23, [0x09], 'RDRAM')])
-        elif(current_glc_boxes == 1):
-            await bizhawk.write(ctx.bizhawk_ctx, [(0x220E23, [0x1D], 'RDRAM')])
-        elif(current_glc_boxes == 2):
-            await bizhawk.write(ctx.bizhawk_ctx, [(0x220E23, [0x31], 'RDRAM')])
-        elif(current_glc_boxes == 3):
-            await bizhawk.write(ctx.bizhawk_ctx, [(0x220E23, [0x45], 'RDRAM')])
-        elif(current_glc_boxes == 4):
-            await bizhawk.write(ctx.bizhawk_ctx, [(0x220E23, [0x59], 'RDRAM')])
-        elif(current_glc_boxes == 5):
-            await bizhawk.write(ctx.bizhawk_ctx, [(0x220E23, [0x6D], 'RDRAM')])
-        elif(current_glc_boxes == 6):
-            await bizhawk.write(ctx.bizhawk_ctx, [(0x220E23, [0x81], 'RDRAM')])
-        elif(current_glc_boxes == 7):
-            await bizhawk.write(ctx.bizhawk_ctx, [(0x220E23, [0x95], 'RDRAM')])
                 
         if player_has_battled:
             player_won = all(x == b'\x00' for x in flags[5:8])
@@ -207,6 +177,15 @@ class PokemonStadiumClient(BizHawkClient):
         if text == 'Magnificent!':
             await ctx.check_locations(set([event_locations['Beat Rival'].ap_code]))
             await bizhawk.write(ctx.bizhawk_ctx, [(0x420010, [0x00, 0x00, 0x00, 0x00], 'RDRAM')])
+
+        # GLC Boxes
+        selecting_team = flags[8] == b'\x22\x0E\x20'
+        if selecting_team:
+            item = box_upgrade_items['GLC PC Box Upgrade'].ap_code
+            box_count = sum(1 for net_item in ctx.items_received if net_item.item == item)
+            table_size = 29 + 20 * box_count
+
+            await bizhawk.write(ctx.bizhawk_ctx, [(0x220E23, [table_size], 'RDRAM')])
 
         # Minigames
         if flags[3].startswith(b'\x00\x03\x00') and flags[3][3] in range(9):

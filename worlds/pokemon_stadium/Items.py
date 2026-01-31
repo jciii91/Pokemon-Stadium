@@ -22,6 +22,7 @@ def create_itempool(world: 'PokemonStadiumWorld') -> List[Item]:
     victory = create_item(world, 'Victory')
     world.multiworld.get_location('Beat Rival', world.player).place_locked_item(victory)
 
+    item_pool += create_multiple_items(world, 'GLC PC Box Upgrade', 6, ItemClassification.useful)
     item_pool += create_junk_items(world, get_total_locations(world) - len(item_pool) - 1)
 
     return item_pool
@@ -34,7 +35,7 @@ def create_multiple_items(world: "PokemonStadiumWorld", name: str, count: int, i
     data = item_table[name]
     itemlist: List[Item] = []
 
-    for i in range(count):
+    for _ in range(count):
         itemlist += [PokemonStadiumItem(name, item_type, data.ap_code, world.player)]
 
     return itemlist
@@ -72,15 +73,6 @@ pokemon_stadium_items = {
     'Viridian City Key': ItemData(10000015, ItemClassification.progression),
     'Earth Badge': ItemData(10000016, ItemClassification.progression),
 
-    # Useful items
-    'GLC PC Box Upgrade': ItemData(10000017, ItemClassification.useful),
-    'GLC PC Box Upgrade': ItemData(10000018, ItemClassification.useful),
-    'GLC PC Box Upgrade': ItemData(10000019, ItemClassification.useful),
-    'GLC PC Box Upgrade': ItemData(10000020, ItemClassification.useful),
-    'GLC PC Box Upgrade': ItemData(10000021, ItemClassification.useful),
-    'GLC PC Box Upgrade': ItemData(10000022, ItemClassification.useful),
-    'GLC PC Box Upgrade': ItemData(10000023, ItemClassification.useful),
-    'GLC PC Box Upgrade': ItemData(10000024, ItemClassification.useful),
     # Victory is added here since in this organization it needs to be in the default item pool
     'Victory': ItemData(10000000, ItemClassification.progression)
 }
@@ -107,6 +99,10 @@ gym_badge_codes = [
     10000016,
 ]
 
+box_upgrade_items = {
+    'GLC PC Box Upgrade': ItemData(10000017, ItemClassification.useful),
+}
+
 junk_items = {
     "Pokedoll": ItemData(20050011, ItemClassification.filler, 0),
 }
@@ -117,5 +113,6 @@ junk_weights = {
 
 item_table = {
     **pokemon_stadium_items,
+    **box_upgrade_items,
     **junk_items
 }
