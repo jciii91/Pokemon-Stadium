@@ -25,6 +25,8 @@ class PokemonStadiumClient(BizHawkClient):
         self.local_checked_locations = set()
         self.glc_loaded = False
         self.minigame_index = None
+        self.minigame_done = False
+        self.minigame_check_sent = False
 
     async def validate_rom(self, ctx: 'BizHawkClientContext') -> bool:
         try:
@@ -191,14 +193,18 @@ class PokemonStadiumClient(BizHawkClient):
         if flags[3].startswith(b'\x00\x03\x00') and flags[3][3] in range(9):
             self.minigame_index = flags[3][3]
 
-            await bizhawk.write(ctx.bizhawk_ctx, [(0x124860, [0x00, 0x00, 0x00, 0x00], 'RDRAM')])
+        if self.minigame_index != None and flags[4] == b'\x00\x00\x00\x00':
+            self.minigame_done = False
 
-        if self.minigame_index != None and flags[4] == b'\x01\x00\x00\x00':
+        if self.minigame_index != None and not self.minigame_done and flags[4] == b'\x01\x00\x00\x00':
+            self.minigame_done = True
+            self.minigame_check_sent = False
+
+        if self.minigame_done and self.minigame_index != None and not self.minigame_check_sent:
             minigame_ap_acode = 20000100 + self.minigame_index
             await ctx.check_locations([minigame_ap_acode])
 
-            self.minigame_index = None
-            await bizhawk.write(ctx.bizhawk_ctx, [(0x124860, [0x00, 0x00, 0x00, 0x00], 'RDRAM')])
+            self.minigame_check_sent = True
 
         # Send game clear
         if not ctx.finished_game and pokemon_stadium_items['Victory'].ap_code in item_codes:
