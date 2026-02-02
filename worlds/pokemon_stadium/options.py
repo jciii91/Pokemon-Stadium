@@ -49,6 +49,19 @@ class GymCastleRentalRandomness(Choice):
     option_high = 4
     default = 1
 
+class RentalListShuffle(Choice):
+    """
+    Controls whether the rental pokemon list is randomized or not.
+    Instead of going in dex order, the rental tables will be shuffled.
+
+    Off - No change
+    On - All tables shuffled
+    """
+    display_name = "Rental List Shuffle"
+    option_off = 1
+    option_on = 2
+    default = 1
+
 class BaseStatTotalRandomness(Choice):
     """
     Controls the level of randomness for Pokemon BST. Stat distribution per Pokemon will follow a randomly selected distribution curve.
@@ -80,6 +93,7 @@ class PokemonStadiumOptions(PerGameCommonOptions):
     VictoryCondition:           VictoryCondition
     GymCastleTrainerRandomness: GymCastleTrainerRandomness
     GymCastleRentalRandomness:  GymCastleRentalRandomness
+    RentalListShuffle:          RentalListShuffle
     BaseStatTotalRandomness:    BaseStatTotalRandomness
     Trainersanity:              Trainersanity
 
@@ -91,6 +105,7 @@ pokemon_stadium_option_groups: Dict[str, List[Any]] = {
         BaseStatTotalRandomness,
         GymCastleRentalRandomness,
         GymCastleTrainerRandomness,
+        RentalListShuffle,
         Trainersanity,
     ],
 }
