@@ -25,6 +25,10 @@ def get_random_move(attack_type, distribution):
         elif roll <= distribution[6]:
             key_str = attack_type + "7"
 
+    # Spore clause
+    if attack_type == 'STA' and random.randint(1, 200) == 1:
+        return 147
+
     return random.choice(constants.kanto_attack_dict[key_str])
 
 def get_type_name(type_num):

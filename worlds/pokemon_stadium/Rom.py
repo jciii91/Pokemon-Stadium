@@ -46,21 +46,23 @@ def write_tokens(world:World, patch:PokemonStadiumProcedurePatch):
     bst_factor = world.options.BaseStatTotalRandomness.value
     glc_rental_factor = world.options.GymCastleRentalRandomness.value
     glc_trainer_factor = world.options.GymCastleTrainerRandomness.value
-    randomizer = stadium_randomizer.Randomizer('US_1.0', bst_factor, glc_rental_factor, glc_trainer_factor)
+    rental_list_shuffle_factor = world.options.RentalListShuffle.value
+    randomizer = stadium_randomizer.Randomizer('US_1.0', bst_factor, glc_rental_factor, glc_trainer_factor, rental_list_shuffle_factor)
 
     # Bypass CIC
     randomizer.disable_checksum(patch)
     randomizer.randomize_base_stats(patch)
     randomizer.randomize_glc_trainer_pokemon_round1(patch)
     randomizer.randomize_glc_rentals_round1(patch)
+    randomizer.shuffle_rentals(patch)
 
     # Set GP Register to 80420000
     patch.write_token(APTokenTypes.WRITE, 0x202B8, bytes([0x3C, 0x1C, 0x80, 0x42]))
 
-    # Set 'Entering Gym' flag
-    patch.write_token(APTokenTypes.WRITE, 0x2C520, bytes([0xAF, 0x81, 0x00, 0x10]))
+    # Set 'Starting Battle' flag
+    patch.write_token(APTokenTypes.WRITE, 0x855C, bytes([0xAF, 0x81, 0x00, 0x10]))
 
-    # Clear 'Entering Gym' flag
+    # Clear 'Starting Battle' flag
     patch.write_token(APTokenTypes.WRITE, 0x396D08, bytes([0xAF, 0x80, 0x00, 0x10]))
 
     # Turn off A and B button on GLC select screen

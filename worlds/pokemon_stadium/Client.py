@@ -1,7 +1,7 @@
 import logging
 from typing import TYPE_CHECKING
 
-from .Items import pokemon_stadium_items, gym_badge_codes
+from .Items import pokemon_stadium_items, gym_badge_codes, box_upgrade_items
 from .Locations import pokemon_stadium_locations, event_locations
 from NetUtils import ClientStatus
 from .Types import LocData
@@ -25,6 +25,8 @@ class PokemonStadiumClient(BizHawkClient):
         self.local_checked_locations = set()
         self.glc_loaded = False
         self.minigame_index = None
+        self.minigame_done = False
+        self.minigame_check_sent = False
 
     async def validate_rom(self, ctx: 'BizHawkClientContext') -> bool:
         try:
@@ -51,36 +53,39 @@ class PokemonStadiumClient(BizHawkClient):
                 (0x148AC8, 12, 'RDRAM'), # Beat Rival Flag
                 (0x12FC1C, 4, 'RDRAM'), # Minigame being played
                 (0x124860, 4, 'RDRAM'), # Minigame results
+                (0xAE77F, 1, 'RDRAM'), # Enemy team HP slot 1
+                (0xAE7D3, 1, 'RDRAM'), # Enemy team HP slot 2
+                (0xAE827, 1, 'RDRAM'), # Enemy team HP slot 3
+                (0x220C19, 3, 'RDRAM'), # GLC Rentals address
             ]
         )
 
-        glc_flag = int.from_bytes(flags[0], byteorder='big')
-        if glc_flag == 2 and not self.glc_loaded:
-            self.glc_loaded = True
+        player_has_battled = flags[1] != b'\x00\x00\x00\x00'
+        battle_info = await bizhawk.read(ctx.bizhawk_ctx, [(0x0AE540, 4, 'RDRAM')])
+        gym_info = battle_info[0].hex()[4:]
 
-            battle_info = await bizhawk.read(ctx.bizhawk_ctx, [(0x0AE540, 4, 'RDRAM')])
-            gym_number = battle_info[0].hex()[4:]
-            player_has_battled = flags[1] != b'\x00\x00\x00\x00'
+        if player_has_battled:
+            player_won = all(x == b'\x00' for x in flags[5:8])
 
-            if player_has_battled:
-                gym_locations = {
-                    '0004': set([pokemon_stadium_locations['Pewter Gym'].ap_code, pokemon_stadium_locations['BROCK'].ap_code]),
-                    '0104': set([pokemon_stadium_locations['Cerulean Gym'].ap_code, pokemon_stadium_locations['MISTY'].ap_code]),
-                    '0204': set([pokemon_stadium_locations['Vermillion Gym'].ap_code, pokemon_stadium_locations['SURGE'].ap_code]),
-                    '0304': set([pokemon_stadium_locations['Celadon Gym'].ap_code, pokemon_stadium_locations['ERIKA'].ap_code]),
-                    '0404': set([pokemon_stadium_locations['Fuchsia Gym'].ap_code, pokemon_stadium_locations['KOGA'].ap_code]),
-                    '0504': set([pokemon_stadium_locations['Saffron Gym'].ap_code, pokemon_stadium_locations['SABRINA'].ap_code]),
-                    '0604': set([pokemon_stadium_locations['Cinnabar Gym'].ap_code, pokemon_stadium_locations['BLAINE'].ap_code]),
-                    '0704': set([pokemon_stadium_locations['Viridian Gym'].ap_code, pokemon_stadium_locations['GIOVANNI'].ap_code]),
-                    '0901': set([event_locations['Beat Rival'].ap_code]),
-                }
+            if player_won:
+                gym_number = (int(gym_info[0:2]) + 1) * 10
+                trainer_index = int(gym_info[2:])
+                ap_code = 20000000 + gym_number + trainer_index
+                if trainer_index == 4:
+                    locations_to_check = set([ap_code, ap_code + 1])
+                else:
+                    locations_to_check = set([ap_code])
 
                 try:
-                    await ctx.check_locations(gym_locations[gym_number])
+                    await ctx.check_locations(locations_to_check)
                     await bizhawk.write(ctx.bizhawk_ctx, [(0x420010, [0x00, 0x00, 0x00, 0x00], 'RDRAM')])
                     self.glc_loaded = False
                 except:
                     pass
+
+        glc_flag = int.from_bytes(flags[0], byteorder='big')
+        if glc_flag == 2 and not self.glc_loaded:
+            self.glc_loaded = True
 
             self.GLC_UNLOCK_FLAGS = [
                 0x147B70, # Pewter
@@ -161,7 +166,7 @@ class PokemonStadiumClient(BizHawkClient):
                 await bizhawk.write(ctx.bizhawk_ctx, [(self.GLC_UNLOCK_FLAGS[9], [0x01], 'RDRAM')])
                 await bizhawk.write(ctx.bizhawk_ctx, [(self.GLC_UNLOCK_FLAGS[10], [0x01], 'RDRAM')])
 
-            if len(self.unlocked_gyms) > 0 and gym_number != '0804':
+            if len(self.unlocked_gyms) > 0 and gym_info != '0804':
                 first_gym = self.unlocked_gyms[0] - 1
                 await bizhawk.write(ctx.bizhawk_ctx, [(0x147D50, [0x00, first_gym], 'RDRAM')])
 
@@ -175,18 +180,31 @@ class PokemonStadiumClient(BizHawkClient):
             await ctx.check_locations(set([event_locations['Beat Rival'].ap_code]))
             await bizhawk.write(ctx.bizhawk_ctx, [(0x420010, [0x00, 0x00, 0x00, 0x00], 'RDRAM')])
 
+        # GLC Boxes
+        selecting_team = flags[8] == b'\x22\x0E\x20'
+        if selecting_team:
+            item = box_upgrade_items['GLC PC Box Upgrade'].ap_code
+            box_count = sum(1 for net_item in ctx.items_received if net_item.item == item)
+            table_size = 29 + 20 * box_count
+
+            await bizhawk.write(ctx.bizhawk_ctx, [(0x220E23, [table_size], 'RDRAM')])
+
         # Minigames
         if flags[3].startswith(b'\x00\x03\x00') and flags[3][3] in range(9):
             self.minigame_index = flags[3][3]
 
-            await bizhawk.write(ctx.bizhawk_ctx, [(0x124860, [0x00, 0x00, 0x00, 0x00], 'RDRAM')])
+        if self.minigame_index != None and flags[4] == b'\x00\x00\x00\x00':
+            self.minigame_done = False
 
-        if self.minigame_index != None and flags[4] == b'\x01\x00\x00\x00':
+        if self.minigame_index != None and not self.minigame_done and flags[4] == b'\x01\x00\x00\x00':
+            self.minigame_done = True
+            self.minigame_check_sent = False
+
+        if self.minigame_done and self.minigame_index != None and not self.minigame_check_sent:
             minigame_ap_acode = 20000100 + self.minigame_index
             await ctx.check_locations([minigame_ap_acode])
 
-            self.minigame_index = None
-            await bizhawk.write(ctx.bizhawk_ctx, [(0x124860, [0x00, 0x00, 0x00, 0x00], 'RDRAM')])
+            self.minigame_check_sent = True
 
         # Send game clear
         if not ctx.finished_game and pokemon_stadium_items['Victory'].ap_code in item_codes:

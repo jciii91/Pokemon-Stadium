@@ -11,11 +11,12 @@ from . import writeDisplayData
 NOP = bytes([0x00,0x00,0x00,0x00])
 
 class Randomizer():
-    def __init__(self, version="US_1.0", bst_factor=1, glc_rental_factor=1, glc_trainer_factor=1):
+    def __init__(self, version="US_1.0", bst_factor=1, glc_rental_factor=1, glc_trainer_factor=1, rental_list_shuffle_factor=1):
         self.version = version
         self.bst_factor = bst_factor
         self.glc_trainer_factor = glc_trainer_factor
         self.glc_rental_factor = glc_rental_factor
+        self.rental_list_shuffle_factor = rental_list_shuffle_factor
 
         self.evs = []
         self.ivs = []
@@ -105,7 +106,7 @@ class Randomizer():
                         new_stats = self.new_display_stats[pokedex_num]
                         evs = self.evs[pokedex_num]
                         ivs = self.ivs[pokedex_num]
-                        disp = writeDisplayData.DisplayDataWriter.write_gym_tower_display(new_stats, evs, ivs)
+                        disp = writeDisplayData.DisplayDataWriter.write_gym_tower_display(new_stats, evs, ivs, 50)
                         patch.write_token(APTokenTypes.WRITE, offset, bytes(disp))
                         offset += len(disp)
 
@@ -206,7 +207,7 @@ class Randomizer():
                 stats = self.new_display_stats[j]
                 evs = self.evs[j]
                 ivs = self.ivs[j]
-                disp = writeDisplayData.DisplayDataWriter.write_gym_tower_display(stats, evs, ivs)
+                disp = writeDisplayData.DisplayDataWriter.write_gym_tower_display(stats, evs, ivs, 50)
                 patch.write_token(APTokenTypes.WRITE, offset, bytes(disp))
                 offset += len(disp)
 
@@ -219,3 +220,124 @@ class Randomizer():
 
                 patch.write_token(APTokenTypes.WRITE, offset, bytes.fromhex("0000000000000000000000000000000000")) # Padding
                 offset += 17
+    
+    def shuffle_rentals(self, patch) -> None:
+        #Shuffle time
+        if self.rental_list_shuffle_factor > 1:
+            self.shuffle_glc(patch)
+        return patch
+    
+    def shuffle_glc(self, patch) -> None:
+        #Gym Leader Castle
+        #Shuffle GLC Rental Table
+        offset = constants.rom_offsets[self.version]["Rentals_GymCastle_Round1"]
+        
+        pokemon_holder = []
+        
+        # Write expected number of returned Pokémon
+        patch.write_token(APTokenTypes.WRITE, offset, bytes.fromhex("00000095"))
+        offset += 4
+
+        for j in range(149):
+            current_pokemon_bytearray = bytearray()
+            
+            current_pokemon_bytearray.extend(bytes([j + 1]))
+            offset += 1
+
+            current_pokemon_bytearray.extend(bytes.fromhex("00"))
+            offset += 1
+
+            current_pokemon_bytearray.extend(bytes.fromhex("0008"))
+            offset += 2
+
+            current_pokemon_bytearray.extend(bytes.fromhex("32"))
+            offset += 1
+            
+            current_pokemon_bytearray.extend(bytes.fromhex("00"))
+            offset += 1
+
+            pkm_type = bytes.fromhex(constants.kanto_dex_names[j]["type"])
+            current_pokemon_bytearray.extend(bytes(pkm_type))
+            offset += 2
+
+            current_pokemon_bytearray.extend(bytes.fromhex("00"))
+            offset += 1
+
+            if self.glc_rental_factor > 1:
+                bst_list = self.bst_list[j]
+                factor = self.glc_rental_factor
+                new_attacks = randomMovesetGenerator.MovesetGenerator.get_random_moveset(bst_list, factor, pkm_type)
+                for attack in new_attacks:
+                    current_pokemon_bytearray.extend(bytes([attack]))
+                    offset += 1
+            else:
+                for attack in constants.GLC_list[j]["Moveset"]:
+                    current_pokemon_bytearray.extend(bytes([attack]))
+                    offset += 1
+
+            current_pokemon_bytearray.extend(bytes.fromhex("00"))
+            offset += 1
+
+            current_pokemon_bytearray.extend(bytes.fromhex("1110"))
+            offset += 2
+
+            current_pokemon_bytearray.extend(bytes.fromhex("00"))
+            offset += 1
+
+            exp_bytes = int.to_bytes(int(constants.kanto_dex_names[j]["exp"]), 3, "big")
+            current_pokemon_bytearray.extend(bytes(exp_bytes))
+            offset += 3
+
+            for k in range(5):
+                ev = int.to_bytes(self.evs[j][k], 2, "big")
+                current_pokemon_bytearray.extend(bytes(ev))
+                offset += 2
+
+            ivs_bytes = bytes.fromhex(self.ivs[j])
+            current_pokemon_bytearray.extend(ivs_bytes)
+            offset += len(ivs_bytes)
+
+            current_pokemon_bytearray.extend(bytes.fromhex("00000000"))
+            offset += 4  # I think setting these to 0 gives you the vanilla PP for moves
+
+            current_pokemon_bytearray.extend(bytes.fromhex("32"))
+            offset += 1
+
+            current_pokemon_bytearray.extend(bytes.fromhex("00"))
+            offset += 1
+
+            stats = self.new_display_stats[j]
+            evs = self.evs[j]
+            ivs = self.ivs[j]
+            disp = writeDisplayData.DisplayDataWriter.write_gym_tower_display(stats, evs, ivs, 50)
+            current_pokemon_bytearray.extend(bytes(disp))
+            offset += len(disp)
+
+            pokemon_name = constants.kanto_dex_names[j]["name"].encode().ljust(11, b'\x00')
+            current_pokemon_bytearray.extend(bytes(pokemon_name))
+            offset += 11
+
+            current_pokemon_bytearray.extend(bytes.fromhex("52414E444F000000"))
+            offset += 8
+
+            current_pokemon_bytearray.extend(bytes.fromhex("0000000000000000000000000000000000"))
+            offset += 17
+
+
+            pokemon_holder.append(bytearray(current_pokemon_bytearray))
+            
+        #Shuffles order of rental pokemon
+        random.shuffle(pokemon_holder)
+
+        offset = constants.rom_offsets[self.version]["Rentals_GymCastle_Round1"]
+
+        patch.write_token(APTokenTypes.WRITE, offset, bytes.fromhex("00000095"))
+        offset += 4
+
+    
+        while len(pokemon_holder) > 0:
+            #Get pokemon bytes from list
+            pokemon_to_add = pokemon_holder.pop(0)
+            patch.write_token(APTokenTypes.WRITE, offset, bytes(pokemon_to_add))
+            offset+= len(bytes(pokemon_to_add))
+        print("GLC rentals shuffled successfully")
