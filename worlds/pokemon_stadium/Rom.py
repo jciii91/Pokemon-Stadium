@@ -59,10 +59,10 @@ def write_tokens(world:World, patch:PokemonStadiumProcedurePatch):
     # Set GP Register to 80420000
     patch.write_token(APTokenTypes.WRITE, 0x202B8, bytes([0x3C, 0x1C, 0x80, 0x42]))
 
-    # Set 'Entering Gym' flag
-    patch.write_token(APTokenTypes.WRITE, 0x2C520, bytes([0xAF, 0x81, 0x00, 0x10]))
+    # Set 'Starting Battle' flag
+    patch.write_token(APTokenTypes.WRITE, 0x855C, bytes([0xAF, 0x81, 0x00, 0x10]))
 
-    # Clear 'Entering Gym' flag
+    # Clear 'Starting Battle' flag
     patch.write_token(APTokenTypes.WRITE, 0x396D08, bytes([0xAF, 0x80, 0x00, 0x10]))
 
     # Turn off A and B button on GLC select screen

@@ -2,9 +2,9 @@ rom_offsets = {
     "US_1.0" : {
         "CheckSum1" : 0x63C,
         "CheckSum2" : 0x648,
+        "SetBattleStartFlag": 34140,
         "BaseStats" : 465825,
         "SetGPRegister": 131768,
-        "SetEnterGymFlag": 181536,
         "Rental_Table_Input_Routine" : 3023512,
         "DefeatedNonLeaderFlag": 3761116,
         "LostToTrainerFlag": 3763336,
