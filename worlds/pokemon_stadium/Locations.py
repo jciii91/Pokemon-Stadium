@@ -13,8 +13,10 @@ def get_total_locations(world: 'PokemonStadiumWorld') -> int:
     return len(location_table)
 
 def get_location_names() -> Dict[str, int]:
-    location_table.update(trainersanity_locations)
-    names = {name: data.ap_code for name, data in location_table.items()}
+    temp_loc_table = location_table.copy()
+    temp_loc_table.update(trainersanity_locations)
+
+    names = {name: data.ap_code for name, data in temp_loc_table.items()}
 
     return names
 
