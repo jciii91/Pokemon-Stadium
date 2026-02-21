@@ -70,19 +70,22 @@ class PokemonStadiumClient(BizHawkClient):
 
             if player_won:
                 gym_number = (int(gym_info[0:2]) + 1) * 10
-                trainer_index = int(gym_info[2:])
-                ap_code = 20000000 + gym_number + trainer_index
-                if trainer_index == 4:
-                    locations_to_check = set([ap_code, ap_code + 1])
-                else:
-                    locations_to_check = set([ap_code])
 
-                try:
-                    await ctx.check_locations(locations_to_check)
-                    await bizhawk.write(ctx.bizhawk_ctx, [(0x420010, [0x00, 0x00, 0x00, 0x00], 'RDRAM')])
-                    self.glc_loaded = False
-                except:
-                    pass
+                if gym_number < 100:
+                    trainer_index = int(gym_info[2:])
+                    ap_code = 20000000 + gym_number + trainer_index
+
+                    if trainer_index == 4:
+                        locations_to_check = set([ap_code, ap_code + 1])
+                    else:
+                        locations_to_check = set([ap_code])
+
+                    try:
+                        await ctx.check_locations(locations_to_check)
+                        await bizhawk.write(ctx.bizhawk_ctx, [(0x420010, [0x00, 0x00, 0x00, 0x00], 'RDRAM')])
+                        self.glc_loaded = False
+                    except:
+                        pass
 
         glc_flag = int.from_bytes(flags[0], byteorder='big')
         if glc_flag == 2 and not self.glc_loaded:
