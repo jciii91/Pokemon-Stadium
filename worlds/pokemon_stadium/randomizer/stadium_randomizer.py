@@ -39,6 +39,12 @@ class Randomizer():
         self.new_display_stats = []
         self.bst_list = []
 
+        if(bst_factor == 1):
+            for i in range(149):
+                stats = constants.kanto_dex_names[i]['bst']
+                self.bst_list.append(stats)
+                self.new_display_stats.append(stats)
+
     def disable_checksum(self, patch) -> None:
         offset = constants.rom_offsets[self.version]["CheckSum1"]
         patch.write_token(APTokenTypes.WRITE, offset, NOP)
