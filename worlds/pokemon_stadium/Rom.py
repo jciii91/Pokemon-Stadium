@@ -44,11 +44,6 @@ def get_base_rom_path():
 def write_tokens(world:World, patch:PokemonStadiumProcedurePatch):
     # version = settings['ROMVersion']
     bst_factor = world.options.BaseStatTotalRandomness.value
-    glc_rental_factor = world.options.GymCastleRentalRandomness.value
-    glc_trainer_factor = world.options.GymCastleTrainerRandomness.value
-    rental_list_shuffle_factor = world.options.RentalListShuffle.value
-    randomizer = stadium_randomizer.Randomizer('US_1.0', bst_factor, glc_rental_factor, glc_trainer_factor, rental_list_shuffle_factor)
-
     glc_trainer_factor = world.options.GymCastleTrainerRandomness.value
     glc_rental_factor = world.options.GymCastleRentalRandomness.value
     pokecup_rental_factor = world.options.PokeCupRentalRandomness.value

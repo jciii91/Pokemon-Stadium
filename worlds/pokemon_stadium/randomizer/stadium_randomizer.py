@@ -11,12 +11,24 @@ from . import writeDisplayData
 NOP = bytes([0x00,0x00,0x00,0x00])
 
 class Randomizer():
-    def __init__(self, version="US_1.0", bst_factor=1, glc_rental_factor=1, glc_trainer_factor=1, rental_list_shuffle_factor=1):
+    def __init__(self, version="US_1.0", bst_factor=1, glc_trainer_factor=1, glc_rental_factor=1, 
+                  pokecup_rental_factor=1, primecup_rental_factor=1, petitcup_rental_factor=1, pikacup_rental_factor=1,rental_list_shuffle_factor=1,
+                 rls_glc_factor=1, rls_poke_factor=1, rls_prime_factor=1, rls_petit_factor=1,
+                 rls_pika_factor=1):
         self.version = version
         self.bst_factor = bst_factor
         self.glc_trainer_factor = glc_trainer_factor
         self.glc_rental_factor = glc_rental_factor
+        self.pokecup_rental_factor = pokecup_rental_factor
+        self.primecup_rental_factor = primecup_rental_factor
+        self.petitcup_rental_factor = petitcup_rental_factor
         self.rental_list_shuffle_factor = rental_list_shuffle_factor
+        self.pikacup_rental_factor = pikacup_rental_factor
+        self.rls_glc_factor = rls_glc_factor
+        self.rls_poke_factor = rls_poke_factor
+        self.rls_prime_factor = rls_prime_factor
+        self.rls_petit_factor = rls_petit_factor
+        self.rls_pika_factor = rls_pika_factor
 
         self.evs = []
         self.ivs = []
