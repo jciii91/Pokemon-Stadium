@@ -58,6 +58,8 @@ class PokemonStadiumClient(BizHawkClient):
                 (0xAE827, 1, 'RDRAM'), # Enemy team HP slot 3
                 (0x220C19, 3, 'RDRAM'), # GLC Rentals address
                 (0x221D99, 3, 'RDRAM'), # GLC Registration table address
+                (0x218CB9, 3, 'RDRAM'), # Prime Cup Rentals address
+                (0x219E90, 3, 'RDRAM'), # Prime Cup Registration table address
             ]
         )
 
@@ -195,6 +197,16 @@ class PokemonStadiumClient(BizHawkClient):
 
             await bizhawk.write(ctx.bizhawk_ctx, [(address, [table_size], 'RDRAM')])
 
+        # Prime Boxes
+        selecting_team = flags[10] == b'\x21\x8F\x10'
+        registering_team = flags[11] == b'\x21\xA0\x90'
+        if selecting_team or registering_team:
+            address = 0x218F13 if selecting_team else 0x21A093
+            item = box_upgrade_items['Prime Cup PC Box Upgrade'].ap_code
+            box_count = sum(1 for net_item in ctx.items_received if net_item.item == item)
+            table_size = 29 + 20 * box_count
+
+            await bizhawk.write(ctx.bizhawk_ctx, [(address, [table_size], 'RDRAM')])
         # Minigames
         if flags[3].startswith(b'\x00\x03\x00') and flags[3][3] in range(9):
             self.minigame_index = flags[3][3]

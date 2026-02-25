@@ -23,6 +23,10 @@ def create_itempool(world: 'PokemonStadiumWorld') -> List[Item]:
     world.multiworld.get_location('Beat Rival', world.player).place_locked_item(victory)
 
     item_pool += create_multiple_items(world, 'GLC PC Box Upgrade', 6, ItemClassification.useful)
+    #item_pool += create_multiple_items(world, 'Poke Cup PC Box Upgrade', 6, ItemClassification.useful)
+    item_pool += create_multiple_items(world, 'Prime Cup PC Box Upgrade', 6, ItemClassification.useful)
+    #item_pool += create_multiple_items(world, 'Petit PC Box Upgrade', 4, ItemClassification.useful)
+    #item_pool += create_multiple_items(world, 'Pika PC Box Upgrade', 5, ItemClassification.useful)
     item_pool += create_junk_items(world, get_total_locations(world) - len(item_pool) - 1)
 
     return item_pool
@@ -101,6 +105,7 @@ gym_badge_codes = [
 
 box_upgrade_items = {
     'GLC PC Box Upgrade': ItemData(10000017, ItemClassification.useful),
+    'Prime Cup PC Box Upgrade' : ItemData(10000018, ItemClassification.useful),
 }
 
 junk_items = {
