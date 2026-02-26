@@ -58,8 +58,14 @@ class PokemonStadiumClient(BizHawkClient):
                 (0xAE827, 1, 'RDRAM'), # Enemy team HP slot 3
                 (0x220C19, 3, 'RDRAM'), # GLC Rentals address
                 (0x221D99, 3, 'RDRAM'), # GLC Registration table address
+                (0x218CE9, 3, 'RDRAM'), # Poke Cup Rentals address
+                (0x219E69, 3, 'RDRAM'), # Poke Cup Registration table address
                 (0x218CB9, 3, 'RDRAM'), # Prime Cup Rentals address
-                (0x219E90, 3, 'RDRAM'), # Prime Cup Registration table address
+                (0x219E39, 3, 'RDRAM'), # Prime Cup Registration table address
+                (0x218C99, 3, 'RDRAM'), # Petit Cup Rentals address
+                (0x219E19, 3, 'RDRAM'), # Petit Cup Registration table address
+                (0x218CA9, 3, 'RDRAM'), # Pika Cup Rentals address
+                (0x219E29, 3, 'RDRAM') # Pika Cup Registration table address
             ]
         )
 
@@ -196,15 +202,44 @@ class PokemonStadiumClient(BizHawkClient):
             table_size = 29 + 20 * box_count
 
             await bizhawk.write(ctx.bizhawk_ctx, [(address, [table_size], 'RDRAM')])
-
-        # Prime Boxes
+        # Poke Boxes
         selecting_team = flags[10] == b'\x21\x8F\x10'
         registering_team = flags[11] == b'\x21\xA0\x90'
+        if selecting_team or registering_team:
+            address = 0x218F13 if selecting_team else 0x21A093
+            item = box_upgrade_items['Poke Cup PC Box Upgrade'].ap_code
+            box_count = sum(1 for net_item in ctx.items_received if net_item.item == item)
+            table_size = 29 + 20 * box_count
+
+            await bizhawk.write(ctx.bizhawk_ctx, [(address, [table_size], 'RDRAM')])
+        # Prime Boxes
+        selecting_team = flags[12] == b'\x21\x8F\x10'
+        registering_team = flags[13] == b'\x21\xA0\x90'
         if selecting_team or registering_team:
             address = 0x218F13 if selecting_team else 0x21A093
             item = box_upgrade_items['Prime Cup PC Box Upgrade'].ap_code
             box_count = sum(1 for net_item in ctx.items_received if net_item.item == item)
             table_size = 29 + 20 * box_count
+
+            await bizhawk.write(ctx.bizhawk_ctx, [(address, [table_size], 'RDRAM')])
+        # Petit Boxes
+        selecting_team = flags[14] == b'\x21\x8F\x10'
+        registering_team = flags[15] == b'\x21\xA0\x90'
+        if selecting_team or registering_team:
+            address = 0x218F13 if selecting_team else 0x21A093
+            item = box_upgrade_items['Petit Cup PC Box Upgrade'].ap_code
+            box_count = sum(1 for net_item in ctx.items_received if net_item.item == item)
+            table_size = 9 + 9 * box_count
+
+            await bizhawk.write(ctx.bizhawk_ctx, [(address, [table_size], 'RDRAM')])
+        # Pika Boxes
+        selecting_team = flags[16] == b'\x21\x8F\x10'
+        registering_team = flags[17] == b'\x21\xA0\x90'
+        if selecting_team or registering_team:
+            address = 0x218F13 if selecting_team else 0x21A093
+            item = box_upgrade_items['Pika Cup PC Box Upgrade'].ap_code
+            box_count = sum(1 for net_item in ctx.items_received if net_item.item == item)
+            table_size = 16 + 15 * box_count
 
             await bizhawk.write(ctx.bizhawk_ctx, [(address, [table_size], 'RDRAM')])
         # Minigames
