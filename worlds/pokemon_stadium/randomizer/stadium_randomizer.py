@@ -274,7 +274,7 @@ class Randomizer():
             offset += 1
 
             # Random moveset
-            bst_list = self.bst_list[j]
+            bst_list = constants.poke_cup_list[j]["bst"]
             factor = self.pokecup_rental_factor
             new_attacks = randomMovesetGenerator.MovesetGenerator.get_random_moveset(bst_list, factor, pkm_type)
             for attack in new_attacks:
@@ -290,7 +290,7 @@ class Randomizer():
             patch.write_token(APTokenTypes.WRITE, offset, bytes.fromhex("00"))
             offset += 1
 
-            exp_bytes = int.to_bytes(int(constants.kanto_dex_names[j]["exp"]), 3, "big")
+            exp_bytes = int.to_bytes(int(constants.poke_cup_list[j]["exp"]), 3, "big")
             patch.write_token(APTokenTypes.WRITE, offset, bytes(exp_bytes)) # Experience
             offset += 3
 
@@ -329,7 +329,7 @@ class Randomizer():
             patch.write_token(APTokenTypes.WRITE, offset, bytes.fromhex("0000000000000000000000000000000000")) # Padding
             offset += 17
     def randomize_primecup_rentals_round1(self, patch) -> None:
-        #randomize pokemon in Poke Cup rental list
+        #randomize pokemon in Prime Cup rental list
         offset = constants.rom_offsets[self.version]["Rentals_PrimeCup_Round1"]
         
         # Write expected number of returned Pokémon
@@ -353,7 +353,7 @@ class Randomizer():
             patch.write_token(APTokenTypes.WRITE, offset, bytes.fromhex("00")) # Status
             offset += 1
 
-            pkm_type = bytes.fromhex(constants.kanto_dex_names[j]["type"])
+            pkm_type = bytes.fromhex(constants.prime_cup_list[j]["type"])
             patch.write_token(APTokenTypes.WRITE, offset, bytes(pkm_type)) # Type(s)
             offset += 2
 
@@ -361,7 +361,7 @@ class Randomizer():
             offset += 1
 
             # Random moveset
-            bst_list = self.bst_list[j]
+            bst_list = constants.prime_cup_list[j]["bst"]
             factor = self.primecup_rental_factor
             new_attacks = randomMovesetGenerator.MovesetGenerator.get_random_moveset(bst_list, factor, pkm_type)
             for attack in new_attacks:
@@ -377,7 +377,7 @@ class Randomizer():
             patch.write_token(APTokenTypes.WRITE, offset, bytes.fromhex("00"))
             offset += 1
 
-            exp_bytes = int.to_bytes(int(constants.kanto_dex_names[j]["exp"]), 3, "big")
+            exp_bytes = int.to_bytes(int(constants.prime_cup_list[j]["exp"]), 3, "big")
             patch.write_token(APTokenTypes.WRITE, offset, bytes(exp_bytes)) # Experience
             offset += 3
 
@@ -406,7 +406,7 @@ class Randomizer():
             patch.write_token(APTokenTypes.WRITE, offset, bytes(disp))
             offset += len(disp)
 
-            pokemon_name = constants.kanto_dex_names[j]["name"].encode().ljust(11, b'\x00')
+            pokemon_name = constants.prime_cup_list[j]["name"].encode().ljust(11, b'\x00')
             patch.write_token(APTokenTypes.WRITE, offset, bytes(pokemon_name)) # Name
             offset += 11
 
@@ -885,7 +885,7 @@ class Randomizer():
             current_pokemon_bytearray.extend(bytes.fromhex("00"))
             offset += 1
 
-            exp_bytes = int.to_bytes(int(constants.kanto_dex_names[j]["exp"]), 3, "big")
+            exp_bytes = int.to_bytes(int(constants.prime_cup_list[j]["exp"]), 3, "big")
             current_pokemon_bytearray.extend(bytes(exp_bytes))
             offset += 3
 
