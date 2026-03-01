@@ -77,6 +77,14 @@ pokemon_stadium_items = {
     'Viridian City Key': ItemData(10000015, ItemClassification.progression),
     'Earth Badge': ItemData(10000016, ItemClassification.progression),
 
+    'Poké Cup - Great Ball - Entry': ItemData(10000017, ItemClassification.progression),
+    'Poké Cup - Ultra Ball - Entry': ItemData(10000018, ItemClassification.progression),
+    'Poké Cup - Master Ball - Entry': ItemData(10000019, ItemClassification.progression),
+
+    'Prime Cup - Great Ball - Entry': ItemData(10000020, ItemClassification.progression),
+    'Prime Cup - Ultra Ball - Entry': ItemData(10000021, ItemClassification.progression),
+    'Prime Cup - Master Ball - Entry': ItemData(10000022, ItemClassification.progression),
+
     # Victory is added here since in this organization it needs to be in the default item pool
     'Victory': ItemData(10000000, ItemClassification.progression)
 }

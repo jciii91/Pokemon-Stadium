@@ -71,29 +71,32 @@ class PokemonStadiumClient(BizHawkClient):
 
         player_has_battled = flags[1] != b'\x00\x00\x00\x00'
         battle_info = await bizhawk.read(ctx.bizhawk_ctx, [(0x0AE540, 4, 'RDRAM')])
+        mode = int(battle_info[0].hex()[:2])
         gym_info = battle_info[0].hex()[4:]
+        gym_number = int(battle_info[0].hex()[4:7])
+        trainer_index = int(battle_info[0].hex()[7:])
 
         if player_has_battled:
             player_won = all(x == b'\x00' for x in flags[5:8])
 
             if player_won:
-                gym_number = (int(gym_info[0:2]) + 1) * 10
+                ap_code = 20000000 + (mode * 100) + (gym_number * 10) + trainer_index
+                print(ap_code)
 
-                if gym_number < 100:
-                    trainer_index = int(gym_info[2:])
-                    ap_code = 20000000 + gym_number + trainer_index
+                # If a Gym Leader was beaten or the last trainer for a Cup was beaten an additional check must be sent
+                if mode == 7 and trainer_index == 4:
+                    locations_to_check = set([ap_code, ap_code + 1])
+                elif trainer_index == 8:
+                    locations_to_check = set([ap_code, ap_code - trainer_index])
+                else:
+                    locations_to_check = set([ap_code])
 
-                    if trainer_index == 4:
-                        locations_to_check = set([ap_code, ap_code + 1])
-                    else:
-                        locations_to_check = set([ap_code])
-
-                    try:
-                        await ctx.check_locations(locations_to_check)
-                        await bizhawk.write(ctx.bizhawk_ctx, [(0x420010, [0x00, 0x00, 0x00, 0x00], 'RDRAM')])
-                        self.glc_loaded = False
-                    except:
-                        pass
+                try:
+                    await ctx.check_locations(locations_to_check)
+                    await bizhawk.write(ctx.bizhawk_ctx, [(0x420010, [0x00, 0x00, 0x00, 0x00], 'RDRAM')])
+                    self.glc_loaded = False
+                except:
+                    pass
 
         glc_flag = int.from_bytes(flags[0], byteorder='big')
         if glc_flag == 2 and not self.glc_loaded:

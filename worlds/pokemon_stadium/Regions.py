@@ -9,7 +9,7 @@ if TYPE_CHECKING:
 def create_regions(world: "PokemonStadiumWorld"):
     menu = create_region(world, "Menu")
 
-    # ---------------------------------- Gym Leader Castle ----------------------------------    
+    # ---------------------------------- Gym Leader Castle ----------------------------------
     gym_leader_castle = create_region_and_connect(world, "Gym Leader Castle", "Menu -> Gym Leader Castle", menu)
 
     create_region_and_connect(world, "Elite Four", "Gym Leader Castle -> Elite Four", gym_leader_castle)
@@ -17,8 +17,15 @@ def create_regions(world: "PokemonStadiumWorld"):
     create_region_and_connect(world, "Hall of Fame", "Rival -> Hall of Fame", gym_leader_castle)
     create_region_and_connect(world, "Beat Rival", "Hall of Fame -> Beat Rival", gym_leader_castle)
 
-    # -------------------------------------- Kids Club --------------------------------------    
-    gym_leader_castle = create_region_and_connect(world, "Kids Club", "Menu -> Kids Club", menu)
+    # -------------------------------------- Kids Club --------------------------------------
+    create_region_and_connect(world, "Kids Club", "Menu -> Kids Club", menu)
+
+    # --------------------------------------- Stadium ---------------------------------------
+    stadium = create_region_and_connect(world, "Stadium", "Menu -> Stadium", menu)
+    create_region_and_connect(world, "Poké Cup", "Stadium -> Poké Cup", stadium)
+    create_region_and_connect(world, "Petit Cup", "Stadium -> Petit Cup", stadium)
+    create_region_and_connect(world, "Pika Cup", "Stadium -> Pika Cup", stadium)
+    create_region_and_connect(world, "Prime Cup", "Stadium -> Prime Cup", stadium)
 
 def create_region(world: "PokemonStadiumWorld", name: str) -> Region:
     reg = Region(name, world.player, world.multiworld)

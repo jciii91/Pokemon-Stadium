@@ -27,14 +27,23 @@ def set_rules(world: "PokemonStadiumWorld"):
     set_rule(world.multiworld.get_location("BLAINE", player), lambda state: state.has("Cinnabar Island Key", player))
     set_rule(world.multiworld.get_location("GIOVANNI", player), lambda state: state.has("Viridian City Key", player))
 
-    #Trainersanity GLC
+    # Cup Access
+    set_rule(world.multiworld.get_location("Poké Cup - Great Ball - Prize", player), lambda state: state.has("Poké Cup - Great Ball - Entry", player))
+    set_rule(world.multiworld.get_location("Poké Cup - Ultra Ball - Prize", player), lambda state: state.has("Poké Cup - Ultra Ball - Entry", player))
+    set_rule(world.multiworld.get_location("Poké Cup - Master Ball - Prize", player), lambda state: state.has("Poké Cup - Master Ball - Entry", player))
+
+    set_rule(world.multiworld.get_location("Prime Cup - Great Ball - Prize", player), lambda state: state.has("Prime Cup - Great Ball - Entry", player))
+    set_rule(world.multiworld.get_location("Prime Cup - Ultra Ball - Prize", player), lambda state: state.has("Prime Cup - Ultra Ball - Entry", player))
+    set_rule(world.multiworld.get_location("Prime Cup - Master Ball - Prize", player), lambda state: state.has("Prime Cup - Master Ball - Entry", player))
+
+    #Trainersanity All
     if world.options.Trainersanity.value == 1:
         set_rule(world.multiworld.get_location("Pewter Gym - Bug Boy", player), lambda state: state.has("Pewter City Key", player))
         set_rule(world.multiworld.get_location("Pewter Gym - Lad", player), lambda state: state.has("Pewter City Key", player))
-        set_rule(world.multiworld.get_location("Pewter Gym - Jr♂", player), lambda state: state.has("Pewter City Key", player))
+        set_rule(world.multiworld.get_location("Pewter Gym - Jr(M)", player), lambda state: state.has("Pewter City Key", player))
 
         set_rule(world.multiworld.get_location("Cerulean Gym - Fisher", player), lambda state: state.has("Cerulean City Key", player))
-        set_rule(world.multiworld.get_location("Cerulean Gym - Jr♀", player), lambda state: state.has("Cerulean City Key", player))
+        set_rule(world.multiworld.get_location("Cerulean Gym - Jr(F)", player), lambda state: state.has("Cerulean City Key", player))
         set_rule(world.multiworld.get_location("Cerulean Gym - Swimmer", player), lambda state: state.has("Cerulean City Key", player))
 
         set_rule(world.multiworld.get_location("Vermillion Gym - Sailor", player), lambda state: state.has("Vermillion City Key", player))
@@ -43,7 +52,7 @@ def set_rules(world: "PokemonStadiumWorld"):
 
         set_rule(world.multiworld.get_location("Celadon Gym - Lass", player), lambda state: state.has("Celadon City Key", player))
         set_rule(world.multiworld.get_location("Celadon Gym - Beauty", player), lambda state: state.has("Celadon City Key", player))
-        set_rule(world.multiworld.get_location("Celadon Gym - Cool♀", player), lambda state: state.has("Celadon City Key", player))
+        set_rule(world.multiworld.get_location("Celadon Gym - Cool(F)", player), lambda state: state.has("Celadon City Key", player))
         
         set_rule(world.multiworld.get_location("Fuchsia Gym - Biker", player), lambda state: state.has("Fuchsia City Key", player))
         set_rule(world.multiworld.get_location("Fuchsia Gym - Tamer", player), lambda state: state.has("Fuchsia City Key", player))
@@ -59,7 +68,7 @@ def set_rules(world: "PokemonStadiumWorld"):
 
         set_rule(world.multiworld.get_location("Viridian Gym - Rocket", player), lambda state: state.has("Viridian City Key", player))
         set_rule(world.multiworld.get_location("Viridian Gym - Lab Man", player), lambda state: state.has("Viridian City Key", player))
-        set_rule(world.multiworld.get_location("Viridian Gym - Cool♂", player), lambda state: state.has("Viridian City Key", player))
+        set_rule(world.multiworld.get_location("Viridian Gym - Cool(M)", player), lambda state: state.has("Viridian City Key", player))
 
     # Beat Rival Rule
     badges = ["Boulder Badge", "Cascade Badge", "Thunder Badge", "Rainbow Badge", "Soul Badge", "Marsh Badge", "Volcano Badge", "Earth Badge"]
