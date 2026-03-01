@@ -112,15 +112,15 @@ gym_badge_codes = [
 ]
 
 box_upgrade_items = {
-    'GLC PC Box Upgrade': ItemData(10000017, ItemClassification.useful),
-    'Poke Cup PC Box Upgrade' : ItemData(10000018, ItemClassification.useful),
-    'Prime Cup PC Box Upgrade' : ItemData(10000019, ItemClassification.useful),
-    'Petit Cup PC Box Upgrade' : ItemData(10000020, ItemClassification.useful),
-    'Pika Cup PC Box Upgrade' : ItemData(10000021, ItemClassification.useful),
+    'GLC PC Box Upgrade': ItemData(10000101, ItemClassification.useful),
+    'Poke Cup PC Box Upgrade' : ItemData(10000102, ItemClassification.useful),
+    'Prime Cup PC Box Upgrade' : ItemData(10000103, ItemClassification.useful),
+    'Petit Cup PC Box Upgrade' : ItemData(10000104, ItemClassification.useful),
+    'Pika Cup PC Box Upgrade' : ItemData(10000105, ItemClassification.useful),
 }
 
 junk_items = {
-    "Pokedoll": ItemData(20050011, ItemClassification.filler, 0),
+    "Pokedoll": ItemData(10000200, ItemClassification.filler, 0),
 }
 
 junk_weights = {
