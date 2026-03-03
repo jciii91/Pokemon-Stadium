@@ -47,13 +47,73 @@ class Trainersanity(Toggle):
 
 class GymCastleTrainerRandomness(Choice):
     """
-    Controls the level of randomness for the enemy team moves in Gym Leader Castle.
+    Controls the level of randomness for the enemy team and movesets in Gym Leader Castle.
     Vanilla - No change
     Low - Movesets have a status, STAB, and higher attack stat aligned move. (4th move is fully random)
     Medium - Movesets have a STAB, and higher attack stat aligned move. (3rd and 4th moves are fully random)
     High - Movesets have a higher attack stat aligned move. (all other moves are fully random)
     """
     display_name = "Gym Castle Trainer Randomness"
+    option_vanilla = 1
+    option_low = 2
+    option_medium = 3
+    option_high = 4
+    default = 1
+
+class PokeCupTrainerRandomness(Choice):
+    """
+    Controls the level of randomness for the enemy team and movesets in Poke Cup.
+    Vanilla - No change
+    Low - Movesets have a status, STAB, and higher attack stat aligned move. (4th move is fully random)
+    Medium - Movesets have a STAB, and higher attack stat aligned move. (3rd and 4th moves are fully random)
+    High - Movesets have a higher attack stat aligned move. (all other moves are fully random)
+    """
+    display_name = "Poke Cup Trainer Randomness"
+    option_vanilla = 1
+    option_low = 2
+    option_medium = 3
+    option_high = 4
+    default = 1
+
+class PrimeCupTrainerRandomness(Choice):
+    """
+    Controls the level of randomness for the enemy team and movesets in Prime Cup.
+    Vanilla - No change
+    Low - Movesets have a status, STAB, and higher attack stat aligned move. (4th move is fully random)
+    Medium - Movesets have a STAB, and higher attack stat aligned move. (3rd and 4th moves are fully random)
+    High - Movesets have a higher attack stat aligned move. (all other moves are fully random)
+    """
+    display_name = "Prime Cup Trainer Randomness"
+    option_vanilla = 1
+    option_low = 2
+    option_medium = 3
+    option_high = 4
+    default = 1
+
+class PetitCupTrainerRandomness(Choice):
+    """
+    Controls the level of randomness for the enemy team and movesets in Petit Cup.
+    Vanilla - No change
+    Low - Movesets have a status, STAB, and higher attack stat aligned move. (4th move is fully random)
+    Medium - Movesets have a STAB, and higher attack stat aligned move. (3rd and 4th moves are fully random)
+    High - Movesets have a higher attack stat aligned move. (all other moves are fully random)
+    """
+    display_name = "Petit Cup Trainer Randomness"
+    option_vanilla = 1
+    option_low = 2
+    option_medium = 3
+    option_high = 4
+    default = 1
+
+class PikaCupTrainerRandomness(Choice):
+    """
+    Controls the level of randomness for the enemy team and movesets in Pika Cup.
+    Vanilla - No change
+    Low - Movesets have a status, STAB, and higher attack stat aligned move. (4th move is fully random)
+    Medium - Movesets have a STAB, and higher attack stat aligned move. (3rd and 4th moves are fully random)
+    High - Movesets have a higher attack stat aligned move. (all other moves are fully random)
+    """
+    display_name = "Pika Cup Trainer Randomness"
     option_vanilla = 1
     option_low = 2
     option_medium = 3
@@ -231,6 +291,10 @@ class PokemonStadiumOptions(PerGameCommonOptions):
     BaseStatTotalRandomness:    BaseStatTotalRandomness
     Trainersanity:              Trainersanity
     GymCastleTrainerRandomness: GymCastleTrainerRandomness
+    PokeCupTrainerRandomness:   PokeCupTrainerRandomness
+    PrimeCupTrainerRandomness:  PrimeCupTrainerRandomness
+    PetitCupTrainerRandomness:  PetitCupTrainerRandomness
+    PikaCupTrainerRandomness:   PikaCupTrainerRandomness
     GymCastleRentalRandomness:  GymCastleRentalRandomness
     PokeCupRentalRandomness:    PokeCupRentalRandomness
     PrimeCupRentalRandomness:   PrimeCupRentalRandomness
@@ -250,18 +314,29 @@ pokemon_stadium_option_groups: Dict[str, List[Any]] = {
     "General Options": [
         VictoryCondition,
         BaseStatTotalRandomness,
-        Trainersanity,
+        Trainersanity,  
+    ],
+
+    "Enemy Trainer Pokemon Options": [
         GymCastleTrainerRandomness,
+        PokeCupTrainerRandomness,
+        PrimeCupTrainerRandomness,
+        PetitCupTrainerRandomness,
+        PikaCupTrainerRandomness,
+    ],
+    "Rental Pokemon Options":
+    [
         GymCastleRentalRandomness,
         PokeCupRentalRandomness,
         PrimeCupRentalRandomness,
         PetitCupRentalRandomness,
         PikaCupRentalRandomness,
-        RentalListShuffle,
+    ],
+    "Shuffling Options":
+    [   RentalListShuffle,
         RentalListShuffleGLC,
         RentalListShufflePokeCup,
         RentalListShufflePrimeCup,
         RentalListShufflePetitCup,
-        RentalListShufflePikaCup
-    ],
+        RentalListShufflePikaCup],
 }

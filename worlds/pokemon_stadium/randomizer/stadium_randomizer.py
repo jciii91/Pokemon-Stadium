@@ -7,17 +7,21 @@ from . import util
 from .randomizePokemonBaseValues import BaseValuesRandomizer
 from . import randomMovesetGenerator
 from . import writeDisplayData
+from .levelFunctions import levelExpCalculator
 
 NOP = bytes([0x00,0x00,0x00,0x00])
 
 class Randomizer():
-    def __init__(self, version="US_1.0", bst_factor=1, glc_trainer_factor=1, glc_rental_factor=1, 
-                  pokecup_rental_factor=1, primecup_rental_factor=1, petitcup_rental_factor=1, pikacup_rental_factor=1,rental_list_shuffle_factor=1,
-                 rls_glc_factor=1, rls_poke_factor=1, rls_prime_factor=1, rls_petit_factor=1,
-                 rls_pika_factor=1):
+    def __init__(self, version="US_1.0", bst_factor=1, glc_trainer_factor=1, pokecup_trainer_factor=1, primecup_trainer_factor=1, petitcup_trainer_factor=1,
+                 pikacup_trainer_factor=1, glc_rental_factor=1, pokecup_rental_factor=1, primecup_rental_factor=1, petitcup_rental_factor=1, pikacup_rental_factor=1,
+                 rental_list_shuffle_factor=1, rls_glc_factor=1, rls_poke_factor=1, rls_prime_factor=1, rls_petit_factor=1, rls_pika_factor=1):
         self.version = version
         self.bst_factor = bst_factor
         self.glc_trainer_factor = glc_trainer_factor
+        self.pokecup_trainer_factor = pokecup_trainer_factor
+        self.primecup_trainer_factor = primecup_trainer_factor
+        self.petitcup_trainer_factor = petitcup_trainer_factor
+        self.pikacup_trainer_factor = pikacup_trainer_factor
         self.glc_rental_factor = glc_rental_factor
         self.pokecup_rental_factor = pokecup_rental_factor
         self.primecup_rental_factor = primecup_rental_factor
@@ -76,44 +80,113 @@ class Randomizer():
             offset += 23
 
     def randomize_glc_trainer_pokemon_round1(self, patch) -> None:
-        factor = self.glc_trainer_factor
-        if factor > 1:
-            offset = constants.rom_offsets[self.version]["GymCastle_Round1"]
-            for q in range(10):
-                team_count = 4 if q < 9 else 7
-                for _ in range(team_count):
-                    new_team = random.sample(range(149), 6)
-                    for s in range(6):
-                        pokedex_num = new_team[s]
-                        patch.write_token(APTokenTypes.WRITE, offset, bytes([pokedex_num + 1]))  # Write Pokémon index
+        offset = constants.rom_offsets[self.version]["GymCastle_Round1"]
+        for q in range(10):
+            team_count = 4 if q < 9 else 7
+            for _ in range(team_count):
+                new_team = random.sample(range(149), 6)
+                for s in range(6):
+                    pokedex_num = new_team[s]
+                    patch.write_token(APTokenTypes.WRITE, offset, bytes([pokedex_num + 1]))  # Write Pokémon index
+                    offset += 1
+
+                    offset += 5  # Seek forward by 5 bytes
+
+                    new_type = bytes.fromhex(constants.kanto_dex_names[pokedex_num]["type"])
+                    patch.write_token(APTokenTypes.WRITE, offset, bytes(new_type)) # Write Pokémon type
+                    offset += len(new_type)
+
+                    offset += 1  # Seek forward by 1 byte
+
+                    # Random moveset
+                    bst = self.bst_list[pokedex_num]
+                    factor = self.glc_trainer_factor
+                    new_attacks = randomMovesetGenerator.MovesetGenerator.get_random_moveset(bst, factor, new_type)
+                    for attack in new_attacks:
+                        patch.write_token(APTokenTypes.WRITE, offset, bytes([attack]))
                         offset += 1
 
-                        offset += 5  # Seek forward by 5 bytes
+                    offset += 4  # Seek forward by 4 bytes
 
-                        new_type = bytes.fromhex(constants.kanto_dex_names[pokedex_num]["type"])
-                        patch.write_token(APTokenTypes.WRITE, offset, bytes(new_type)) # Write Pokémon type
-                        offset += len(new_type)
+                    exp = int.to_bytes(int(constants.kanto_dex_names[pokedex_num]["exp"]), 3, "big")
+                    patch.write_token(APTokenTypes.WRITE, offset, exp)
+                    offset += 3
 
-                        offset += 1  # Seek forward by 1 byte
+                    for t in range(5):
+                        ev = int.to_bytes(self.evs[pokedex_num][t], 2, "big")
+                        patch.write_token(APTokenTypes.WRITE, offset, ev)
+                        offset += 2
 
-                        # Random moveset
-                        bst = self.bst_list[pokedex_num]
-                        
-                        new_attacks = randomMovesetGenerator.MovesetGenerator.get_random_moveset(bst, factor, new_type)
-                        for attack in new_attacks:
-                            patch.write_token(APTokenTypes.WRITE, offset, bytes([attack]))
-                            offset += 1
+                    ivs_bytes = bytes.fromhex(self.ivs[pokedex_num])
+                    patch.write_token(APTokenTypes.WRITE, offset, ivs_bytes)
+                    offset += len(ivs_bytes)
 
-                        offset += 4  # Seek forward by 4 bytes
+                    offset += 6  # Seek forward by 6 bytes
 
+                    new_stats = self.new_display_stats[pokedex_num]
+                    evs = self.evs[pokedex_num]
+                    ivs = self.ivs[pokedex_num]
+                    disp = writeDisplayData.DisplayDataWriter.write_gym_tower_display(new_stats, evs, ivs, 50)
+                    patch.write_token(APTokenTypes.WRITE, offset, bytes(disp))
+                    offset += len(disp)
+
+                    pokemon_name = constants.kanto_dex_names[pokedex_num]["name"].encode()
+                    patch.write_token(APTokenTypes.WRITE, offset, bytes(pokemon_name))
+                    offset += len(pokemon_name)
+
+                    # Check if a Nidoran is being written in to add their gender symbol
+                    if pokedex_num == 28:
+                        patch.write_token(APTokenTypes.WRITE, offset, bytes.fromhex("BE")) # Female symbol
+                        offset += 1
+                        pokemon_name += b" "
+                    elif pokedex_num == 31:
+                        patch.write_token(APTokenTypes.WRITE, offset, bytes.fromhex("BE")) # Male symbol
+                        offset += 1
+                        pokemon_name += b" "
+
+                    # Fill in blank spaces to make the name 11 bytes long
+                    if len(pokemon_name) < 11:
+                        blanks = 11 - len(pokemon_name)
+                        patch.write_token(APTokenTypes.WRITE, offset, b"\x00" * blanks)
+                        offset += blanks
+
+                    offset += 25  # Seek forward by 25 bytes
+                offset += 56  # Seek forward by 56 bytes
+            offset += 16  # Seek forward by 16 bytes
+    
+    def randomize_pokecup_trainer_pokemon_round1(self, patch) -> None:
+        offset = constants.rom_offsets[self.version]["PokeCup_Round1"]
+        for q in range(4):
+            team_count = 8 
+            for _ in range(team_count):
+                new_team = random.sample(range(149), 6)
+                for s in range(6):
+                    pokedex_num = new_team[s]
+                    patch.write_token(APTokenTypes.WRITE, offset, bytes([pokedex_num + 1]))  # Write Pokémon index
+                    offset += 1
+
+                    offset += 5  # Seek forward by 5 bytes
+
+                    new_type = bytes.fromhex(constants.kanto_dex_names[pokedex_num]["type"])
+                    patch.write_token(APTokenTypes.WRITE, offset, bytes(new_type)) # Write Pokémon type
+                    offset += len(new_type)
+
+                    offset += 1  # Seek forward by 1 byte
+
+                    # Random moveset
+                    bst = self.bst_list[pokedex_num]
+                    factor = self.pokecup_trainer_factor
+                    new_attacks = randomMovesetGenerator.MovesetGenerator.get_random_moveset(bst, factor, new_type)
+                    for attack in new_attacks:
+                        patch.write_token(APTokenTypes.WRITE, offset, bytes([attack]))
+                        offset += 1
+
+                    offset += 4  # Seek forward by 4 bytes
+
+                    if(q == 0): #poke cup pokeball round 1, level 50
                         exp = int.to_bytes(int(constants.kanto_dex_names[pokedex_num]["exp"]), 3, "big")
                         patch.write_token(APTokenTypes.WRITE, offset, exp)
                         offset += 3
-
-                        for t in range(5):
-                            ev = int.to_bytes(self.evs[pokedex_num][t], 2, "big")
-                            patch.write_token(APTokenTypes.WRITE, offset, ev)
-                            offset += 2
 
                         ivs_bytes = bytes.fromhex(self.ivs[pokedex_num])
                         patch.write_token(APTokenTypes.WRITE, offset, ivs_bytes)
@@ -128,29 +201,163 @@ class Randomizer():
                         patch.write_token(APTokenTypes.WRITE, offset, bytes(disp))
                         offset += len(disp)
 
-                        pokemon_name = constants.kanto_dex_names[pokedex_num]["name"].encode()
-                        patch.write_token(APTokenTypes.WRITE, offset, bytes(pokemon_name))
-                        offset += len(pokemon_name)
+                    elif(q == 1): #poke cup great ball round 1, level 51
+                        exp = int.to_bytes(int(levelExpCalculator.getExpValue(51, constants.kanto_dex_names[pokedex_num]["gr"])), 3, "big")
+                        patch.write_token(APTokenTypes.WRITE, offset, exp)
+                        offset += 3
 
-                        # Check if a Nidoran is being written in to add their gender symbol
-                        if pokedex_num == 28:
-                            patch.write_token(APTokenTypes.WRITE, offset, bytes.fromhex("BE")) # Female symbol
-                            offset += 1
-                            pokemon_name += b" "
-                        elif pokedex_num == 31:
-                            patch.write_token(APTokenTypes.WRITE, offset, bytes.fromhex("BE")) # Male symbol
-                            offset += 1
-                            pokemon_name += b" "
+                        ivs_bytes = bytes.fromhex(self.ivs[pokedex_num])
+                        patch.write_token(APTokenTypes.WRITE, offset, ivs_bytes)
+                        offset += len(ivs_bytes)
 
-                        # Fill in blank spaces to make the name 11 bytes long
-                        if len(pokemon_name) < 11:
-                            blanks = 11 - len(pokemon_name)
-                            patch.write_token(APTokenTypes.WRITE, offset, b"\x00" * blanks)
-                            offset += blanks
+                        offset += 6  # Seek forward by 6 bytes
 
-                        offset += 25  # Seek forward by 25 bytes
-                    offset += 56  # Seek forward by 56 bytes
-                offset += 16  # Seek forward by 16 bytes
+                        new_stats = self.new_display_stats[pokedex_num]
+                        evs = self.evs[pokedex_num]
+                        ivs = self.ivs[pokedex_num]
+                        disp = writeDisplayData.DisplayDataWriter.write_gym_tower_display(new_stats, evs, ivs, 51)
+                        patch.write_token(APTokenTypes.WRITE, offset, bytes(disp))
+                        offset += len(disp)
+
+                    elif(q == 2): #poke cup ultra ball round 1, mixed levels
+                        exp = int.to_bytes(int(levelExpCalculator.getExpValue(constants.pokecupr1_ultra_levels[_][s], constants.kanto_dex_names[pokedex_num]["gr"])), 3, "big")
+                        patch.write_token(APTokenTypes.WRITE, offset, exp)
+                        offset += 3
+
+                        ivs_bytes = bytes.fromhex(self.ivs[pokedex_num])
+                        patch.write_token(APTokenTypes.WRITE, offset, ivs_bytes)
+                        offset += len(ivs_bytes)
+
+                        offset += 6  # Seek forward by 6 bytes
+
+                        new_stats = self.new_display_stats[pokedex_num]
+                        evs = self.evs[pokedex_num]
+                        ivs = self.ivs[pokedex_num]
+                        disp = writeDisplayData.DisplayDataWriter.write_gym_tower_display(new_stats, evs, ivs, constants.pokecupr1_ultra_levels[_][s])
+                        patch.write_token(APTokenTypes.WRITE, offset, bytes(disp))
+                        offset += len(disp)
+
+                    elif(q == 3): #poke cup master ball round 1, mixed levels
+                        exp = int.to_bytes(int(levelExpCalculator.getExpValue(constants.pokecupr1_master_levels[_][s], constants.kanto_dex_names[pokedex_num]["gr"])), 3, "big")
+                        patch.write_token(APTokenTypes.WRITE, offset, exp)
+                        offset += 3
+
+                        ivs_bytes = bytes.fromhex(self.ivs[pokedex_num])
+                        patch.write_token(APTokenTypes.WRITE, offset, ivs_bytes)
+                        offset += len(ivs_bytes)
+
+                        offset += 6  # Seek forward by 6 bytes
+
+                        new_stats = self.new_display_stats[pokedex_num]
+                        evs = self.evs[pokedex_num]
+                        ivs = self.ivs[pokedex_num]
+                        disp = writeDisplayData.DisplayDataWriter.write_gym_tower_display(new_stats, evs, ivs, constants.pokecupr1_master_levels[_][s])
+                        patch.write_token(APTokenTypes.WRITE, offset, bytes(disp))
+                        offset += len(disp)
+
+                    for t in range(5):
+                        ev = int.to_bytes(self.evs[pokedex_num][t], 2, "big")
+                        patch.write_token(APTokenTypes.WRITE, offset, ev)
+                        offset += 2
+
+                    pokemon_name = constants.kanto_dex_names[pokedex_num]["name"].encode()
+                    patch.write_token(APTokenTypes.WRITE, offset, bytes(pokemon_name))
+                    offset += len(pokemon_name)
+
+                    # Check if a Nidoran is being written in to add their gender symbol
+                    if pokedex_num == 28:
+                        patch.write_token(APTokenTypes.WRITE, offset, bytes.fromhex("BE")) # Female symbol
+                        offset += 1
+                        pokemon_name += b" "
+                    elif pokedex_num == 31:
+                        patch.write_token(APTokenTypes.WRITE, offset, bytes.fromhex("BE")) # Male symbol
+                        offset += 1
+                        pokemon_name += b" "
+
+                    # Fill in blank spaces to make the name 11 bytes long
+                    if len(pokemon_name) < 11:
+                        blanks = 11 - len(pokemon_name)
+                        patch.write_token(APTokenTypes.WRITE, offset, b"\x00" * blanks)
+                        offset += blanks
+
+                    offset += 25  # Seek forward by 25 bytes
+                offset += 56  # Seek forward by 56 bytes
+            offset += 16  # Seek forward by 16 bytes
+    def randomize_primecup_trainer_pokemon_round1(self, patch) -> None:
+        offset = constants.rom_offsets[self.version]["PrimeCup_Round1"]
+        for q in range(4):
+            team_count = 8
+            for _ in range(team_count):
+                new_team = random.sample(range(149), 6)
+                for s in range(6):
+                    pokedex_num = new_team[s]
+                    patch.write_token(APTokenTypes.WRITE, offset, bytes([pokedex_num + 1]))  # Write Pokémon index
+                    offset += 1
+
+                    offset += 5  # Seek forward by 5 bytes
+
+                    new_type = bytes.fromhex(constants.kanto_dex_names[pokedex_num]["type"])
+                    patch.write_token(APTokenTypes.WRITE, offset, bytes(new_type)) # Write Pokémon type
+                    offset += len(new_type)
+
+                    offset += 1  # Seek forward by 1 byte
+
+                    # Random moveset
+                    bst = self.bst_list[pokedex_num]
+                    factor = self.primecup_trainer_factor
+                    new_attacks = randomMovesetGenerator.MovesetGenerator.get_random_moveset(bst, factor, new_type)
+                    for attack in new_attacks:
+                        patch.write_token(APTokenTypes.WRITE, offset, bytes([attack]))
+                        offset += 1
+
+                    offset += 4  # Seek forward by 4 bytes
+
+
+                    exp = int.to_bytes(int(constants.prime_cup_list[pokedex_num]["exp"]), 3, "big")
+                    patch.write_token(APTokenTypes.WRITE, offset, exp)
+                    offset += 3
+
+                    for t in range(5):
+                        ev = int.to_bytes(self.evs[pokedex_num][t], 2, "big")
+                        patch.write_token(APTokenTypes.WRITE, offset, ev)
+                        offset += 2
+
+                    ivs_bytes = bytes.fromhex(self.ivs[pokedex_num])
+                    patch.write_token(APTokenTypes.WRITE, offset, ivs_bytes)
+                    offset += len(ivs_bytes)
+
+                    offset += 6  # Seek forward by 6 bytes
+
+                    new_stats = self.new_display_stats[pokedex_num]
+                    evs = self.evs[pokedex_num]
+                    ivs = self.ivs[pokedex_num]
+                    disp = writeDisplayData.DisplayDataWriter.write_gym_tower_display(new_stats, evs, ivs, 100)
+                    patch.write_token(APTokenTypes.WRITE, offset, bytes(disp))
+                    offset += len(disp)
+
+                    pokemon_name = constants.kanto_dex_names[pokedex_num]["name"].encode()
+                    patch.write_token(APTokenTypes.WRITE, offset, bytes(pokemon_name))
+                    offset += len(pokemon_name)
+
+                    # Check if a Nidoran is being written in to add their gender symbol
+                    if pokedex_num == 28:
+                        patch.write_token(APTokenTypes.WRITE, offset, bytes.fromhex("BE")) # Female symbol
+                        offset += 1
+                        pokemon_name += b" "
+                    elif pokedex_num == 31:
+                        patch.write_token(APTokenTypes.WRITE, offset, bytes.fromhex("BE")) # Male symbol
+                        offset += 1
+                        pokemon_name += b" "
+
+                    # Fill in blank spaces to make the name 11 bytes long
+                    if len(pokemon_name) < 11:
+                        blanks = 11 - len(pokemon_name)
+                        patch.write_token(APTokenTypes.WRITE, offset, b"\x00" * blanks)
+                        offset += blanks
+
+                    offset += 25  # Seek forward by 25 bytes
+                offset += 56  # Seek forward by 56 bytes
+            offset += 16  # Seek forward by 16 bytes
 
     def randomize_glc_rentals_round1(self, patch) -> None:
         #randomize rentals for GLC
