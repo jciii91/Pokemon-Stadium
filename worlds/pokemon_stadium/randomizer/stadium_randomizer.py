@@ -140,7 +140,7 @@ class Randomizer():
                         offset += 1
                         pokemon_name += b" "
                     elif pokedex_num == 31:
-                        patch.write_token(APTokenTypes.WRITE, offset, bytes.fromhex("BE")) # Male symbol
+                        patch.write_token(APTokenTypes.WRITE, offset, bytes.fromhex("A9")) # Male symbol
                         offset += 1
                         pokemon_name += b" "
 
