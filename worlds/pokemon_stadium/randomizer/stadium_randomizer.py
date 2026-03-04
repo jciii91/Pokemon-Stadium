@@ -153,7 +153,7 @@ class Randomizer():
                     offset += 25  # Seek forward by 25 bytes
                 offset += 56  # Seek forward by 56 bytes
             offset += 16  # Seek forward by 16 bytes
-    
+            
     def randomize_pokecup_trainer_pokemon_round1(self, patch) -> None:
         offset = constants.rom_offsets[self.version]["PokeCup_Round1"]
         for q in range(4):
@@ -270,7 +270,7 @@ class Randomizer():
                         offset += 1
                         pokemon_name += b" "
                     elif pokedex_num == 31:
-                        patch.write_token(APTokenTypes.WRITE, offset, bytes.fromhex("BE")) # Male symbol
+                        patch.write_token(APTokenTypes.WRITE, offset, bytes.fromhex("A9")) # Male symbol
                         offset += 1
                         pokemon_name += b" "
 
@@ -345,7 +345,7 @@ class Randomizer():
                         offset += 1
                         pokemon_name += b" "
                     elif pokedex_num == 31:
-                        patch.write_token(APTokenTypes.WRITE, offset, bytes.fromhex("BE")) # Male symbol
+                        patch.write_token(APTokenTypes.WRITE, offset, bytes.fromhex("A9")) # Male symbol
                         offset += 1
                         pokemon_name += b" "
 
@@ -358,6 +358,171 @@ class Randomizer():
                     offset += 25  # Seek forward by 25 bytes
                 offset += 56  # Seek forward by 56 bytes
             offset += 16  # Seek forward by 16 bytes
+    def randomize_petitcup_trainer_pokemon_round1(self, patch) -> None:
+        offset = constants.rom_offsets[self.version]["PetitCup_Round1"]
+        team_count = 8
+        for _ in range(team_count):
+            new_team = random.sample(constants.petit_cup_list, 6)
+            for s in range(6):
+                #There is probably a much better way to do this, but oh well
+                #We break down each required aspect from a pokemon, save them to a variable, and then 
+                #we do the bytes() command using the saved variable instead of the list because the list
+                #breaks for some reason idrk why
+                pokemonInfo = new_team[s]
+                currentPokeDexNum = pokemonInfo["DexNum"]
+                currentPokeType = pokemonInfo["type"]
+                currentPokeName = pokemonInfo["name"]
+
+                patch.write_token(APTokenTypes.WRITE, offset, int.to_bytes(currentPokeDexNum))  # Write Pokémon index
+                offset += 1
+
+                offset += 5  # Seek forward by 5 bytes
+
+                print(bytes.fromhex(currentPokeType))
+                new_type = bytes.fromhex(currentPokeType)
+                patch.write_token(APTokenTypes.WRITE, offset, bytes(new_type)) # Write Pokémon type
+                offset += len(new_type)
+
+                offset += 1  # Seek forward by 1 byte
+
+                # Random moveset
+                bst = self.bst_list[currentPokeDexNum - 1]
+                factor = self.petitcup_trainer_factor
+                new_attacks = randomMovesetGenerator.MovesetGenerator.get_random_moveset(bst, factor, new_type)
+                for attack in new_attacks:
+                    patch.write_token(APTokenTypes.WRITE, offset, bytes([attack]))
+                    offset += 1
+
+                offset += 4  # Seek forward by 4 bytes
+
+
+                exp = int.to_bytes(int(levelExpCalculator.getExpValue(constants.petitcupr1_levels[_][s], constants.kanto_dex_names[currentPokeDexNum-1]["gr"])), 3, "big")
+                patch.write_token(APTokenTypes.WRITE, offset, exp)
+                offset += 3
+
+                for t in range(5):
+                    ev = int.to_bytes(self.evs[currentPokeDexNum-1][t], 2, "big")
+                    patch.write_token(APTokenTypes.WRITE, offset, ev)
+                    offset += 2
+
+                ivs_bytes = bytes.fromhex(self.ivs[currentPokeDexNum-1])
+                patch.write_token(APTokenTypes.WRITE, offset, ivs_bytes)
+                offset += len(ivs_bytes)
+
+                offset += 6  # Seek forward by 6 bytes
+
+                new_stats = self.new_display_stats[currentPokeDexNum - 1]
+                evs = self.evs[currentPokeDexNum-1]
+                ivs = self.ivs[currentPokeDexNum-1]
+                disp = writeDisplayData.DisplayDataWriter.write_gym_tower_display(new_stats, evs, ivs, constants.petitcupr1_levels[_][s])
+                patch.write_token(APTokenTypes.WRITE, offset, bytes(disp))
+                offset += len(disp)
+
+                pokemon_name = currentPokeName.encode()
+                patch.write_token(APTokenTypes.WRITE, offset, bytes(pokemon_name))
+                offset += len(pokemon_name)
+
+                # Check if a Nidoran is being written in to add their gender symbol
+                if (currentPokeDexNum == 29):
+                    patch.write_token(APTokenTypes.WRITE, offset, bytes.fromhex("BE")) # Female symbol
+                    offset += 1
+                    pokemon_name += b" "
+                elif (currentPokeDexNum == 32):
+                    patch.write_token(APTokenTypes.WRITE, offset, bytes.fromhex("A9")) # Male symbol
+                    offset += 1
+                    pokemon_name += b" "
+
+                # Fill in blank spaces to make the name 11 bytes long
+                if len(pokemon_name) < 11:
+                    blanks = 11 - len(pokemon_name)
+                    patch.write_token(APTokenTypes.WRITE, offset, b"\x00" * blanks)
+                    offset += blanks
+
+                offset += 25  # Seek forward by 25 bytes
+            offset += 56  # Seek forward by 56 bytes
+        offset += 16  # Seek forward by 16 bytes
+    def randomize_pikacup_trainer_pokemon_round1(self, patch) -> None:
+        offset = constants.rom_offsets[self.version]["PikaCup_Round1"]
+        team_count = 8
+        for _ in range(team_count):
+            new_team = random.sample(constants.pika_cup_list, 6)
+            for s in range(6):
+                #There is probably a much better way to do this, but oh well
+                #We break down each required aspect from a pokemon, save them to a variable, and then 
+                #we do the bytes() command using the saved variable instead of the list because the list
+                #breaks for some reason idrk why
+                pokemonInfo = new_team[s]
+                currentPokeDexNum = pokemonInfo["DexNum"]
+                currentPokeType = pokemonInfo["type"]
+                currentPokeName = pokemonInfo["name"]
+
+                patch.write_token(APTokenTypes.WRITE, offset, int.to_bytes(currentPokeDexNum))  # Write Pokémon index
+                offset += 1
+
+                offset += 5  # Seek forward by 5 bytes
+
+                print(bytes.fromhex(currentPokeType))
+                new_type = bytes.fromhex(currentPokeType)
+                patch.write_token(APTokenTypes.WRITE, offset, bytes(new_type)) # Write Pokémon type
+                offset += len(new_type)
+
+                offset += 1  # Seek forward by 1 byte
+
+                # Random moveset
+                bst = self.bst_list[currentPokeDexNum - 1]
+                factor = self.pikacup_trainer_factor
+                new_attacks = randomMovesetGenerator.MovesetGenerator.get_random_moveset(bst, factor, new_type)
+                for attack in new_attacks:
+                    patch.write_token(APTokenTypes.WRITE, offset, bytes([attack]))
+                    offset += 1
+
+                offset += 4  # Seek forward by 4 bytes
+
+
+                exp = int.to_bytes(int(levelExpCalculator.getExpValue(constants.pikacupr1_levels[_][s], constants.kanto_dex_names[currentPokeDexNum-1]["gr"])), 3, "big")
+                patch.write_token(APTokenTypes.WRITE, offset, exp)
+                offset += 3
+
+                for t in range(5):
+                    ev = int.to_bytes(self.evs[currentPokeDexNum-1][t], 2, "big")
+                    patch.write_token(APTokenTypes.WRITE, offset, ev)
+                    offset += 2
+
+                ivs_bytes = bytes.fromhex(self.ivs[currentPokeDexNum-1])
+                patch.write_token(APTokenTypes.WRITE, offset, ivs_bytes)
+                offset += len(ivs_bytes)
+
+                offset += 6  # Seek forward by 6 bytes
+
+                new_stats = self.new_display_stats[currentPokeDexNum - 1]
+                evs = self.evs[currentPokeDexNum-1]
+                ivs = self.ivs[currentPokeDexNum-1]
+                disp = writeDisplayData.DisplayDataWriter.write_gym_tower_display(new_stats, evs, ivs, constants.pikacupr1_levels[_][s])
+                patch.write_token(APTokenTypes.WRITE, offset, bytes(disp))
+                offset += len(disp)
+
+                pokemon_name = currentPokeName.encode()
+                patch.write_token(APTokenTypes.WRITE, offset, bytes(pokemon_name))
+                offset += len(pokemon_name)
+
+                if (currentPokeDexNum == 29):
+                    patch.write_token(APTokenTypes.WRITE, offset, bytes.fromhex("BE")) # Female symbol
+                    offset += 1
+                    pokemon_name += b" "
+                elif (currentPokeDexNum == 32):
+                    patch.write_token(APTokenTypes.WRITE, offset, bytes.fromhex("A9")) # Male symbol
+                    offset += 1
+                    pokemon_name += b" "
+
+                # Fill in blank spaces to make the name 11 bytes long
+                if len(pokemon_name) < 11:
+                    blanks = 11 - len(pokemon_name)
+                    patch.write_token(APTokenTypes.WRITE, offset, b"\x00" * blanks)
+                    offset += blanks
+
+                offset += 25  # Seek forward by 25 bytes
+            offset += 56  # Seek forward by 56 bytes
+        offset += 16  # Seek forward by 16 bytes
 
     def randomize_glc_rentals_round1(self, patch) -> None:
         #randomize rentals for GLC

@@ -75,8 +75,10 @@ def write_tokens(world:World, patch:PokemonStadiumProcedurePatch):
         randomizer.randomize_pokecup_trainer_pokemon_round1(patch)
     if primecup_trainer_factor > 1:
         randomizer.randomize_primecup_trainer_pokemon_round1(patch)
-    # if petitcup_trainer_factor > 1:
-    # if pikacup_trainer_factor > 1:
+    if petitcup_trainer_factor > 1:
+        randomizer.randomize_petitcup_trainer_pokemon_round1(patch)
+    if pikacup_trainer_factor > 1:
+        randomizer.randomize_pikacup_trainer_pokemon_round1(patch)
 
     if glc_rental_factor > 1:
         randomizer.randomize_glc_rentals_round1(patch)
