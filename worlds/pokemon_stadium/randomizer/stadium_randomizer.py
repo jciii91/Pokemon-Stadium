@@ -153,7 +153,7 @@ class Randomizer():
                     offset += 25  # Seek forward by 25 bytes
                 offset += 56  # Seek forward by 56 bytes
             offset += 16  # Seek forward by 16 bytes
-            
+
     def randomize_pokecup_trainer_pokemon_round1(self, patch) -> None:
         offset = constants.rom_offsets[self.version]["PokeCup_Round1"]
         for q in range(4):
@@ -378,7 +378,6 @@ class Randomizer():
 
                 offset += 5  # Seek forward by 5 bytes
 
-                print(bytes.fromhex(currentPokeType))
                 new_type = bytes.fromhex(currentPokeType)
                 patch.write_token(APTokenTypes.WRITE, offset, bytes(new_type)) # Write Pokémon type
                 offset += len(new_type)
@@ -461,7 +460,6 @@ class Randomizer():
 
                 offset += 5  # Seek forward by 5 bytes
 
-                print(bytes.fromhex(currentPokeType))
                 new_type = bytes.fromhex(currentPokeType)
                 patch.write_token(APTokenTypes.WRITE, offset, bytes(new_type)) # Write Pokémon type
                 offset += len(new_type)
