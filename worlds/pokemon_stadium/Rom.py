@@ -121,6 +121,12 @@ def write_tokens(world:World, patch:PokemonStadiumProcedurePatch):
     # Second instruction to set flag for GLC selection screen
     patch.write_token(APTokenTypes.WRITE, 0x3B55F4, bytes([0xAF, 0x82, 0x00, 0x00]))
 
+    # Set selecting Poke Cup tier flag
+    patch.write_token(APTokenTypes.WRITE, 0x2D6A20, bytes([0xAF, 0x93, 0x00, 0x20]))
+
+    # Clear selecting Poke Cup tier flag
+    patch.write_token(APTokenTypes.WRITE, 0x2D6DB0, bytes([0xAF, 0x80, 0x00, 0x20]))
+
     # Stop game from activating unlocked gyms
     patch.write_token(APTokenTypes.WRITE, 0x3B5728, bytes([0xA3, 0x20, 0x00, 0x01]))
 

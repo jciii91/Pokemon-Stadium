@@ -5,6 +5,8 @@ rom_offsets = {
         "SetBattleStartFlag": 34140,
         "BaseStats" : 465825,
         "SetGPRegister": 131768,
+        "SetPokeCupFlag": 2976288,
+        "ClearPokeCupFlag": 2977200,
         "Rental_Table_Input_Routine" : 3023512,
         "DefeatedNonLeaderFlag": 3761116,
         "LostToTrainerFlag": 3763336,

@@ -22,11 +22,13 @@ def create_itempool(world: 'PokemonStadiumWorld') -> List[Item]:
     victory = create_item(world, 'Victory')
     world.multiworld.get_location('Beat Rival', world.player).place_locked_item(victory)
 
+    item_pool += create_multiple_items(world, 'Poké Cup - Tier Upgrade', 3, ItemClassification.progression)
+    item_pool += create_multiple_items(world, 'Prime Cup - Tier Upgrade', 3, ItemClassification.progression)
+
     item_pool += create_multiple_items(world, 'GLC PC Box Upgrade', 6, ItemClassification.useful)
     item_pool += create_multiple_items(world, 'Poke Cup PC Box Upgrade', 6, ItemClassification.useful)
     item_pool += create_multiple_items(world, 'Prime Cup PC Box Upgrade', 6, ItemClassification.useful)
-    item_pool += create_multiple_items(world, 'Petit Cup PC Box Upgrade', 4, ItemClassification.useful)
-    item_pool += create_multiple_items(world, 'Pika Cup PC Box Upgrade', 5, ItemClassification.useful)
+
     item_pool += create_junk_items(world, get_total_locations(world) - len(item_pool) - 1)
 
     return item_pool
@@ -77,14 +79,6 @@ pokemon_stadium_items = {
     'Viridian City Key': ItemData(10000015, ItemClassification.progression),
     'Earth Badge': ItemData(10000016, ItemClassification.progression),
 
-    'Poké Cup - Great Ball - Entry': ItemData(10000017, ItemClassification.progression),
-    'Poké Cup - Ultra Ball - Entry': ItemData(10000018, ItemClassification.progression),
-    'Poké Cup - Master Ball - Entry': ItemData(10000019, ItemClassification.progression),
-
-    'Prime Cup - Great Ball - Entry': ItemData(10000020, ItemClassification.progression),
-    'Prime Cup - Ultra Ball - Entry': ItemData(10000021, ItemClassification.progression),
-    'Prime Cup - Master Ball - Entry': ItemData(10000022, ItemClassification.progression),
-
     # Victory is added here since in this organization it needs to be in the default item pool
     'Victory': ItemData(10000000, ItemClassification.progression)
 }
@@ -111,12 +105,15 @@ gym_badge_codes = [
     10000016,
 ]
 
+cup_tier_upgrade_items = {
+    'Poké Cup - Tier Upgrade': ItemData(10000017, ItemClassification.progression),
+    'Prime Cup - Tier Upgrade': ItemData(10000018, ItemClassification.progression),
+}
+
 box_upgrade_items = {
     'GLC PC Box Upgrade': ItemData(10000101, ItemClassification.useful),
     'Poke Cup PC Box Upgrade' : ItemData(10000102, ItemClassification.useful),
     'Prime Cup PC Box Upgrade' : ItemData(10000103, ItemClassification.useful),
-    'Petit Cup PC Box Upgrade' : ItemData(10000104, ItemClassification.useful),
-    'Pika Cup PC Box Upgrade' : ItemData(10000105, ItemClassification.useful),
 }
 
 junk_items = {
@@ -129,6 +126,7 @@ junk_weights = {
 
 item_table = {
     **pokemon_stadium_items,
+    **cup_tier_upgrade_items,
     **box_upgrade_items,
-    **junk_items
+    **junk_items,
 }
