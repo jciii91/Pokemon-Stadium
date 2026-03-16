@@ -14,15 +14,15 @@ rom_offsets = {
         "SetGLCFlag2": 3888628,
         "GymCastle_Round1": 9057228, 
         "PokeCup_Round1": 9039244, #This starts at pokeball cup
-        "PokeCup_Round2": 9159120, #This starts at pokeball cup
+        "PokeCup_Round2": 9159120, #Needs adjustment
         "PrimeCup_Round1": 9021260, #This starts at pokeball cup
-        "PrimeCup_Round2": 9141136, #This starts at pokeball cup
-        "PetitCup_Round1": 9012208,
-        "PetitCup_Round2": 9132144,
-        "PikaCup_Round1": 9016704,
-        "PikaCup_Round2": 9136640,
-        "Mewtwo_Round1": 9081408,
-        "Mewtwo_Round2": 9201344,
+        "PrimeCup_Round2": 9141136, #Needs adjustment
+        "PetitCup_Round1": 9012268, #Starts at first pokemon first trainer
+        "PetitCup_Round2": 9132144, #Needs adjustment
+        "PikaCup_Round1": 9016764, #Starts at first pokemon first trainer
+        "PikaCup_Round2": 9136640, #Needs adjustment
+        "Mewtwo_Round1": 9081408, #Needs adjustment
+        "Mewtwo_Round2": 9201344, #Needs adjustment
 
 
         "Rentals_GymCastle_Round1" : 9119616,
@@ -873,4 +873,26 @@ pokecupr1_master_levels = [
     [51, 53, 50, 52, 52, 50], 
     [50, 52, 53, 53, 50, 50], 
     [55, 50, 50, 50, 50, 55]
+]
+
+petitcupr1_levels = [
+    [25, 25, 25, 25, 25, 25],
+    [25, 26, 26, 26, 25, 25],
+    [25, 25, 25, 30, 25, 30],
+    [26, 26, 27, 26, 26, 27],
+    [26, 26, 27, 26, 27, 27],
+    [26, 27, 26, 27, 27, 27],
+    [30, 25, 25, 25, 25, 30],
+    [25, 25, 25, 25, 30, 30]
+]
+
+pikacupr1_levels = [
+    [16, 15, 15, 15, 15, 15],
+    [15, 16, 15, 15, 15, 15],
+    [16, 15, 16, 15, 15, 16],
+    [16, 17, 16, 16, 16, 15],
+    [16, 15, 15, 16, 18, 18],
+    [20, 16, 15, 15, 16, 18],
+    [20, 20, 15, 15, 15, 15],
+    [18, 16, 16, 18, 16, 16]
 ]
