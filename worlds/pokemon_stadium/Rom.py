@@ -44,17 +44,66 @@ def get_base_rom_path():
 def write_tokens(world:World, patch:PokemonStadiumProcedurePatch):
     # version = settings['ROMVersion']
     bst_factor = world.options.BaseStatTotalRandomness.value
-    glc_rental_factor = world.options.GymCastleRentalRandomness.value
     glc_trainer_factor = world.options.GymCastleTrainerRandomness.value
+    pokecup_trainer_factor = world.options.PokeCupTrainerRandomness.value
+    primecup_trainer_factor = world.options.PrimeCupTrainerRandomness.value
+    petitcup_trainer_factor = world.options.PetitCupTrainerRandomness.value
+    pikacup_trainer_factor = world.options.PikaCupTrainerRandomness.value
+    glc_rental_factor = world.options.GymCastleRentalRandomness.value
+    pokecup_rental_factor = world.options.PokeCupRentalRandomness.value
+    primecup_rental_factor = world.options.PrimeCupRentalRandomness.value
+    petitcup_rental_factor = world.options.PetitCupRentalRandomness.value
+    pikacup_rental_factor = world.options.PikaCupRentalRandomness.value
     rental_list_shuffle_factor = world.options.RentalListShuffle.value
-    randomizer = stadium_randomizer.Randomizer('US_1.0', bst_factor, glc_rental_factor, glc_trainer_factor, rental_list_shuffle_factor)
+    rental_list_shuffle_glc_factor = world.options.RentalListShuffleGLC.value
+    rental_list_shuffle_poke_cup_factor = world.options.RentalListShufflePokeCup.value
+    rental_list_shuffle_prime_cup_factor = world.options.RentalListShufflePrimeCup.value
+    rental_list_shuffle_petit_cup_factor = world.options.RentalListShufflePetitCup.value
+    rental_list_shuffle_pika_cup_factor = world.options.RentalListShufflePikaCup.value
+    randomizer = stadium_randomizer.Randomizer('US_1.0', bst_factor, glc_trainer_factor, glc_rental_factor, pokecup_trainer_factor, primecup_trainer_factor, petitcup_trainer_factor, 
+                                               pikacup_trainer_factor, pokecup_rental_factor, primecup_rental_factor,petitcup_rental_factor, pikacup_rental_factor, 
+                                               rental_list_shuffle_factor, rental_list_shuffle_glc_factor, rental_list_shuffle_poke_cup_factor, rental_list_shuffle_prime_cup_factor, 
+                                               rental_list_shuffle_petit_cup_factor, rental_list_shuffle_pika_cup_factor)
 
     # Bypass CIC
     randomizer.disable_checksum(patch)
-    randomizer.randomize_base_stats(patch)
-    randomizer.randomize_glc_trainer_pokemon_round1(patch)
-    randomizer.randomize_glc_rentals_round1(patch)
-    randomizer.shuffle_rentals(patch)
+    if bst_factor > 1:
+        randomizer.randomize_base_stats(patch)
+    if glc_trainer_factor > 1:
+        randomizer.randomize_glc_trainer_pokemon_round1(patch)
+    if pokecup_trainer_factor > 1:
+        randomizer.randomize_pokecup_trainer_pokemon_round1(patch)
+    if primecup_trainer_factor > 1:
+        randomizer.randomize_primecup_trainer_pokemon_round1(patch)
+    if petitcup_trainer_factor > 1:
+        randomizer.randomize_petitcup_trainer_pokemon_round1(patch)
+    if pikacup_trainer_factor > 1:
+        randomizer.randomize_pikacup_trainer_pokemon_round1(patch)
+
+    if glc_rental_factor > 1:
+        randomizer.randomize_glc_rentals_round1(patch)
+    if pokecup_rental_factor > 1:
+        randomizer.randomize_pokecup_rentals(patch)
+    if primecup_rental_factor > 1:
+        randomizer.randomize_primecup_rentals_round1(patch)
+    if petitcup_rental_factor > 1:
+        randomizer.randomize_petitcup_rentals(patch)
+    if pikacup_rental_factor > 1:
+        randomizer.randomize_pikacup_rentals(patch)
+    if rental_list_shuffle_factor > 1:
+        if rental_list_shuffle_factor != 3: #Not in manual mode
+            randomizer.shuffle_rentals(patch)
+        else:
+            if rental_list_shuffle_glc_factor > 1:
+                randomizer.shuffle_glc(patch)
+            if rental_list_shuffle_poke_cup_factor > 1:
+                randomizer.shuffle_poke(patch)
+            if rental_list_shuffle_prime_cup_factor > 1:
+                randomizer.shuffle_prime(patch)
+            if rental_list_shuffle_petit_cup_factor > 1:
+                randomizer.shuffle_petit(patch)
+            if rental_list_shuffle_pika_cup_factor > 1:
+                randomizer.shuffle_pika(patch)
 
     # Set GP Register to 80420000
     patch.write_token(APTokenTypes.WRITE, 0x202B8, bytes([0x3C, 0x1C, 0x80, 0x42]))
@@ -73,6 +122,12 @@ def write_tokens(world:World, patch:PokemonStadiumProcedurePatch):
 
     # Second instruction to set flag for GLC selection screen
     patch.write_token(APTokenTypes.WRITE, 0x3B55F4, bytes([0xAF, 0x82, 0x00, 0x00]))
+
+    # Set selecting Poke Cup tier flag
+    patch.write_token(APTokenTypes.WRITE, 0x2D6A20, bytes([0xAF, 0x93, 0x00, 0x20]))
+
+    # Clear selecting Poke Cup tier flag
+    patch.write_token(APTokenTypes.WRITE, 0x2D6DB0, bytes([0xAF, 0x80, 0x00, 0x20]))
 
     # Stop game from activating unlocked gyms
     patch.write_token(APTokenTypes.WRITE, 0x3B5728, bytes([0xA3, 0x20, 0x00, 0x01]))

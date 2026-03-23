@@ -1,7 +1,7 @@
 import logging
 from typing import TYPE_CHECKING
 
-from .Items import pokemon_stadium_items, gym_badge_codes, box_upgrade_items
+from .Items import pokemon_stadium_items, gym_badge_codes, box_upgrade_items, cup_tier_upgrade_items
 from .Locations import pokemon_stadium_locations, event_locations
 from NetUtils import ClientStatus
 from .Types import LocData
@@ -24,6 +24,7 @@ class PokemonStadiumClient(BizHawkClient):
 
         self.local_checked_locations = set()
         self.glc_loaded = False
+        self.cups_loaded = False
         self.minigame_index = None
         self.minigame_done = False
         self.minigame_check_sent = False
@@ -58,34 +59,45 @@ class PokemonStadiumClient(BizHawkClient):
                 (0xAE827, 1, 'RDRAM'), # Enemy team HP slot 3
                 (0x220C19, 3, 'RDRAM'), # GLC Rentals address
                 (0x221D99, 3, 'RDRAM'), # GLC Registration table address
+                (0x218CE9, 3, 'RDRAM'), # Poke Cup Rentals address
+                (0x219E69, 3, 'RDRAM'), # Poke Cup Registration table address
+                (0x218CB9, 3, 'RDRAM'), # Prime Cup Rentals address
+                (0x219E39, 3, 'RDRAM'), # Prime Cup Registration table address
+                (0x218C99, 3, 'RDRAM'), # Petit Cup Rentals address
+                (0x219E19, 3, 'RDRAM'), # Petit Cup Registration table address
+                (0x218CA9, 3, 'RDRAM'), # Pika Cup Rentals address
+                (0x219E29, 3, 'RDRAM'), # Pika Cup Registration table address
+                (0x420020, 4, 'RDRAM'), # Picking a Cup tier
             ]
         )
 
         player_has_battled = flags[1] != b'\x00\x00\x00\x00'
         battle_info = await bizhawk.read(ctx.bizhawk_ctx, [(0x0AE540, 4, 'RDRAM')])
+        mode = int(battle_info[0].hex()[:2])
         gym_info = battle_info[0].hex()[4:]
+        gym_number = int(battle_info[0].hex()[4:7])
+        trainer_index = int(battle_info[0].hex()[7:])
 
         if player_has_battled:
             player_won = all(x == b'\x00' for x in flags[5:8])
 
             if player_won:
-                gym_number = (int(gym_info[0:2]) + 1) * 10
+                ap_code = 20000000 + (mode * 100) + (gym_number * 10) + trainer_index
 
-                if gym_number < 100:
-                    trainer_index = int(gym_info[2:])
-                    ap_code = 20000000 + gym_number + trainer_index
+                # If a Gym Leader was beaten or the last trainer for a Cup was beaten an additional check must be sent
+                if mode == 7 and trainer_index == 4:
+                    locations_to_check = set([ap_code, ap_code + 1])
+                elif trainer_index == 8:
+                    locations_to_check = set([ap_code, ap_code - trainer_index, ap_code + 1])
+                else:
+                    locations_to_check = set([ap_code])
 
-                    if trainer_index == 4:
-                        locations_to_check = set([ap_code, ap_code + 1])
-                    else:
-                        locations_to_check = set([ap_code])
-
-                    try:
-                        await ctx.check_locations(locations_to_check)
-                        await bizhawk.write(ctx.bizhawk_ctx, [(0x420010, [0x00, 0x00, 0x00, 0x00], 'RDRAM')])
-                        self.glc_loaded = False
-                    except:
-                        pass
+                try:
+                    await ctx.check_locations(locations_to_check)
+                    await bizhawk.write(ctx.bizhawk_ctx, [(0x420010, [0x00, 0x00, 0x00, 0x00], 'RDRAM')])
+                    self.glc_loaded = False
+                except:
+                    pass
 
         glc_flag = int.from_bytes(flags[0], byteorder='big')
         if glc_flag == 2 and not self.glc_loaded:
@@ -175,7 +187,6 @@ class PokemonStadiumClient(BizHawkClient):
                 await bizhawk.write(ctx.bizhawk_ctx, [(0x147D50, [0x00, first_gym], 'RDRAM')])
 
             await bizhawk.write(ctx.bizhawk_ctx, [(0x146F38, [0x52, 0x61, 0xFF, 0x82], 'RDRAM')])
-
         elif glc_flag != 2 and self.glc_loaded:
             self.glc_loaded = False
 
@@ -184,12 +195,48 @@ class PokemonStadiumClient(BizHawkClient):
             await ctx.check_locations(set([event_locations['Beat Rival'].ap_code]))
             await bizhawk.write(ctx.bizhawk_ctx, [(0x420010, [0x00, 0x00, 0x00, 0x00], 'RDRAM')])
 
+        cups_flag = int.from_bytes(flags[18], byteorder='big')
+        if cups_flag != 0 and not self.cups_loaded:
+            self.cups_loaded = True
+
+            if mode == 3:
+                cup_tier_item = cup_tier_upgrade_items['Poké Cup - Tier Upgrade'].ap_code
+            else:
+                cup_tier_item = cup_tier_upgrade_items['Prime Cup - Tier Upgrade'].ap_code
+
+            cup_tier = sum(1 for net_item in ctx.items_received if net_item.item == cup_tier_item)
+            await bizhawk.write(ctx.bizhawk_ctx, [(0x147018, [0x00, 0x00, 0x00, cup_tier], 'RDRAM')])
+        else:
+            self.cups_loaded = False
+
         # GLC Boxes
         selecting_team = flags[8] == b'\x22\x0E\x20'
         registering_team = flags[9] == b'\x22\x1F\xA0'
         if selecting_team or registering_team:
             address = 0x220E23 if selecting_team else 0x221FA3
             item = box_upgrade_items['GLC PC Box Upgrade'].ap_code
+            box_count = sum(1 for net_item in ctx.items_received if net_item.item == item)
+            table_size = 29 + 20 * box_count
+
+            await bizhawk.write(ctx.bizhawk_ctx, [(address, [table_size], 'RDRAM')])
+
+        # Poke Boxes
+        selecting_team = flags[10] == b'\x21\x8F\x10'
+        registering_team = flags[11] == b'\x21\xA0\x90'
+        if selecting_team or registering_team:
+            address = 0x218F13 if selecting_team else 0x21A093
+            item = box_upgrade_items['Poke Cup PC Box Upgrade'].ap_code
+            box_count = sum(1 for net_item in ctx.items_received if net_item.item == item)
+            table_size = 29 + 20 * box_count
+
+            await bizhawk.write(ctx.bizhawk_ctx, [(address, [table_size], 'RDRAM')])
+
+        # Prime Boxes
+        selecting_team = flags[12] == b'\x21\x8F\x10'
+        registering_team = flags[13] == b'\x21\xA0\x90'
+        if selecting_team or registering_team:
+            address = 0x218F13 if selecting_team else 0x21A093
+            item = box_upgrade_items['Prime Cup PC Box Upgrade'].ap_code
             box_count = sum(1 for net_item in ctx.items_received if net_item.item == item)
             table_size = 29 + 20 * box_count
 
