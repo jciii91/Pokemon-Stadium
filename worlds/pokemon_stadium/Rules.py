@@ -27,14 +27,23 @@ def set_rules(world: "PokemonStadiumWorld"):
     set_rule(world.multiworld.get_location("BLAINE", player), lambda state: state.has("Cinnabar Island Key", player))
     set_rule(world.multiworld.get_location("GIOVANNI", player), lambda state: state.has("Viridian City Key", player))
 
-    #Trainersanity GLC
+    # Cup Access
+    set_rule(world.multiworld.get_location("Poké Cup - Great Ball - Prize", player), lambda state: state.count('Poké Cup - Tier Upgrade', player) > 0)
+    set_rule(world.multiworld.get_location("Poké Cup - Ultra Ball - Prize", player), lambda state: state.count('Poké Cup - Tier Upgrade', player) > 1)
+    set_rule(world.multiworld.get_location("Poké Cup - Master Ball - Prize", player), lambda state: state.count('Poké Cup - Tier Upgrade', player) > 2)
+
+    set_rule(world.multiworld.get_location("Prime Cup - Great Ball - Prize", player), lambda state: state.count('Prime Cup - Tier Upgrade', player) > 0)
+    set_rule(world.multiworld.get_location("Prime Cup - Ultra Ball - Prize", player), lambda state: state.count('Prime Cup - Tier Upgrade', player) > 1)
+    set_rule(world.multiworld.get_location("Prime Cup - Master Ball - Prize", player), lambda state: state.count('Prime Cup - Tier Upgrade', player) > 2)
+
+    #Trainersanity All
     if world.options.Trainersanity.value == 1:
         set_rule(world.multiworld.get_location("Pewter Gym - Bug Boy", player), lambda state: state.has("Pewter City Key", player))
         set_rule(world.multiworld.get_location("Pewter Gym - Lad", player), lambda state: state.has("Pewter City Key", player))
-        set_rule(world.multiworld.get_location("Pewter Gym - Jr♂", player), lambda state: state.has("Pewter City Key", player))
+        set_rule(world.multiworld.get_location("Pewter Gym - Jr(M)", player), lambda state: state.has("Pewter City Key", player))
 
         set_rule(world.multiworld.get_location("Cerulean Gym - Fisher", player), lambda state: state.has("Cerulean City Key", player))
-        set_rule(world.multiworld.get_location("Cerulean Gym - Jr♀", player), lambda state: state.has("Cerulean City Key", player))
+        set_rule(world.multiworld.get_location("Cerulean Gym - Jr(F)", player), lambda state: state.has("Cerulean City Key", player))
         set_rule(world.multiworld.get_location("Cerulean Gym - Swimmer", player), lambda state: state.has("Cerulean City Key", player))
 
         set_rule(world.multiworld.get_location("Vermillion Gym - Sailor", player), lambda state: state.has("Vermillion City Key", player))
@@ -43,7 +52,7 @@ def set_rules(world: "PokemonStadiumWorld"):
 
         set_rule(world.multiworld.get_location("Celadon Gym - Lass", player), lambda state: state.has("Celadon City Key", player))
         set_rule(world.multiworld.get_location("Celadon Gym - Beauty", player), lambda state: state.has("Celadon City Key", player))
-        set_rule(world.multiworld.get_location("Celadon Gym - Cool♀", player), lambda state: state.has("Celadon City Key", player))
+        set_rule(world.multiworld.get_location("Celadon Gym - Cool(F)", player), lambda state: state.has("Celadon City Key", player))
         
         set_rule(world.multiworld.get_location("Fuchsia Gym - Biker", player), lambda state: state.has("Fuchsia City Key", player))
         set_rule(world.multiworld.get_location("Fuchsia Gym - Tamer", player), lambda state: state.has("Fuchsia City Key", player))
@@ -59,7 +68,61 @@ def set_rules(world: "PokemonStadiumWorld"):
 
         set_rule(world.multiworld.get_location("Viridian Gym - Rocket", player), lambda state: state.has("Viridian City Key", player))
         set_rule(world.multiworld.get_location("Viridian Gym - Lab Man", player), lambda state: state.has("Viridian City Key", player))
-        set_rule(world.multiworld.get_location("Viridian Gym - Cool♂", player), lambda state: state.has("Viridian City Key", player))
+        set_rule(world.multiworld.get_location("Viridian Gym - Cool(M)", player), lambda state: state.has("Viridian City Key", player))
+
+        set_rule(world.multiworld.get_location("Poké Cup - Great Ball - Bug Boy", player), lambda state: state.count('Poké Cup - Tier Upgrade', player) > 0)
+        set_rule(world.multiworld.get_location("Poké Cup - Great Ball - Lad", player), lambda state: state.count('Poké Cup - Tier Upgrade', player) > 0)
+        set_rule(world.multiworld.get_location("Poké Cup - Great Ball - Nerd", player), lambda state: state.count('Poké Cup - Tier Upgrade', player) > 0)
+        set_rule(world.multiworld.get_location("Poké Cup - Great Ball - Sailor", player), lambda state: state.count('Poké Cup - Tier Upgrade', player) > 0)
+        set_rule(world.multiworld.get_location("Poké Cup - Great Ball - Jr(F)", player), lambda state: state.count('Poké Cup - Tier Upgrade', player) > 0)
+        set_rule(world.multiworld.get_location("Poké Cup - Great Ball - Jr(M)", player), lambda state: state.count('Poké Cup - Tier Upgrade', player) > 0)
+        set_rule(world.multiworld.get_location("Poké Cup - Great Ball - Lass", player), lambda state: state.count('Poké Cup - Tier Upgrade', player) > 0)
+        set_rule(world.multiworld.get_location("Poké Cup - Great Ball - Pokémaniac", player), lambda state: state.count('Poké Cup - Tier Upgrade', player) > 0)
+
+        set_rule(world.multiworld.get_location("Poké Cup - Ultra Ball - Bug Boy", player), lambda state: state.count('Poké Cup - Tier Upgrade', player) > 1)
+        set_rule(world.multiworld.get_location("Poké Cup - Ultra Ball - Lad", player), lambda state: state.count('Poké Cup - Tier Upgrade', player) > 1)
+        set_rule(world.multiworld.get_location("Poké Cup - Ultra Ball - Nerd", player), lambda state: state.count('Poké Cup - Tier Upgrade', player) > 1)
+        set_rule(world.multiworld.get_location("Poké Cup - Ultra Ball - Sailor", player), lambda state: state.count('Poké Cup - Tier Upgrade', player) > 1)
+        set_rule(world.multiworld.get_location("Poké Cup - Ultra Ball - Jr(F)", player), lambda state: state.count('Poké Cup - Tier Upgrade', player) > 1)
+        set_rule(world.multiworld.get_location("Poké Cup - Ultra Ball - Jr(M)", player), lambda state: state.count('Poké Cup - Tier Upgrade', player) > 1)
+        set_rule(world.multiworld.get_location("Poké Cup - Ultra Ball - Lass", player), lambda state: state.count('Poké Cup - Tier Upgrade', player) > 1)
+        set_rule(world.multiworld.get_location("Poké Cup - Ultra Ball - Pokémaniac", player), lambda state: state.count('Poké Cup - Tier Upgrade', player) > 1)
+
+        set_rule(world.multiworld.get_location("Poké Cup - Master Ball - Bug Boy", player), lambda state: state.count('Poké Cup - Tier Upgrade', player) > 2)
+        set_rule(world.multiworld.get_location("Poké Cup - Master Ball - Lad", player), lambda state: state.count('Poké Cup - Tier Upgrade', player) > 2)
+        set_rule(world.multiworld.get_location("Poké Cup - Master Ball - Nerd", player), lambda state: state.count('Poké Cup - Tier Upgrade', player) > 2)
+        set_rule(world.multiworld.get_location("Poké Cup - Master Ball - Sailor", player), lambda state: state.count('Poké Cup - Tier Upgrade', player) > 2)
+        set_rule(world.multiworld.get_location("Poké Cup - Master Ball - Jr(F)", player), lambda state: state.count('Poké Cup - Tier Upgrade', player) > 2)
+        set_rule(world.multiworld.get_location("Poké Cup - Master Ball - Jr(M)", player), lambda state: state.count('Poké Cup - Tier Upgrade', player) > 2)
+        set_rule(world.multiworld.get_location("Poké Cup - Master Ball - Lass", player), lambda state: state.count('Poké Cup - Tier Upgrade', player) > 2)
+        set_rule(world.multiworld.get_location("Poké Cup - Master Ball - Pokémaniac", player), lambda state: state.count('Poké Cup - Tier Upgrade', player) > 2)
+
+        set_rule(world.multiworld.get_location("Prime Cup - Great Ball - Cue Ball", player), lambda state: state.count('Prime Cup - Tier Upgrade', player) > 0)
+        set_rule(world.multiworld.get_location("Prime Cup - Great Ball - Rocket", player), lambda state: state.count('Prime Cup - Tier Upgrade', player) > 0)
+        set_rule(world.multiworld.get_location("Prime Cup - Great Ball - Judoboy", player), lambda state: state.count('Prime Cup - Tier Upgrade', player) > 0)
+        set_rule(world.multiworld.get_location("Prime Cup - Great Ball - Gambler", player), lambda state: state.count('Prime Cup - Tier Upgrade', player) > 0)
+        set_rule(world.multiworld.get_location("Prime Cup - Great Ball - Cool(F)", player), lambda state: state.count('Prime Cup - Tier Upgrade', player) > 0)
+        set_rule(world.multiworld.get_location("Prime Cup - Great Ball - Bird Boy", player), lambda state: state.count('Prime Cup - Tier Upgrade', player) > 0)
+        set_rule(world.multiworld.get_location("Prime Cup - Great Ball - Lab Man", player), lambda state: state.count('Prime Cup - Tier Upgrade', player) > 0)
+        set_rule(world.multiworld.get_location("Prime Cup - Great Ball - Cool(M)", player), lambda state: state.count('Prime Cup - Tier Upgrade', player) > 0)
+
+        set_rule(world.multiworld.get_location("Prime Cup - Ultra Ball - Cue Ball", player), lambda state: state.count('Prime Cup - Tier Upgrade', player) > 1)
+        set_rule(world.multiworld.get_location("Prime Cup - Ultra Ball - Rocket", player), lambda state: state.count('Prime Cup - Tier Upgrade', player) > 1)
+        set_rule(world.multiworld.get_location("Prime Cup - Ultra Ball - Judoboy", player), lambda state: state.count('Prime Cup - Tier Upgrade', player) > 1)
+        set_rule(world.multiworld.get_location("Prime Cup - Ultra Ball - Gambler", player), lambda state: state.count('Prime Cup - Tier Upgrade', player) > 1)
+        set_rule(world.multiworld.get_location("Prime Cup - Ultra Ball - Cool(F)", player), lambda state: state.count('Prime Cup - Tier Upgrade', player) > 1)
+        set_rule(world.multiworld.get_location("Prime Cup - Ultra Ball - Bird Boy", player), lambda state: state.count('Prime Cup - Tier Upgrade', player) > 1)
+        set_rule(world.multiworld.get_location("Prime Cup - Ultra Ball - Lab Man", player), lambda state: state.count('Prime Cup - Tier Upgrade', player) > 1)
+        set_rule(world.multiworld.get_location("Prime Cup - Ultra Ball - Cool(M)", player), lambda state: state.count('Prime Cup - Tier Upgrade', player) > 1)
+
+        set_rule(world.multiworld.get_location("Prime Cup - Master Ball - Cue Ball", player), lambda state: state.count('Prime Cup - Tier Upgrade', player) > 2)
+        set_rule(world.multiworld.get_location("Prime Cup - Master Ball - Rocket", player), lambda state: state.count('Prime Cup - Tier Upgrade', player) > 2)
+        set_rule(world.multiworld.get_location("Prime Cup - Master Ball - Judoboy", player), lambda state: state.count('Prime Cup - Tier Upgrade', player) > 2)
+        set_rule(world.multiworld.get_location("Prime Cup - Master Ball - Gambler", player), lambda state: state.count('Prime Cup - Tier Upgrade', player) > 2)
+        set_rule(world.multiworld.get_location("Prime Cup - Master Ball - Cool(F)", player), lambda state: state.count('Prime Cup - Tier Upgrade', player) > 2)
+        set_rule(world.multiworld.get_location("Prime Cup - Master Ball - Bird Boy", player), lambda state: state.count('Prime Cup - Tier Upgrade', player) > 2)
+        set_rule(world.multiworld.get_location("Prime Cup - Master Ball - Lab Man", player), lambda state: state.count('Prime Cup - Tier Upgrade', player) > 2)
+        set_rule(world.multiworld.get_location("Prime Cup - Master Ball - Cool(M)", player), lambda state: state.count('Prime Cup - Tier Upgrade', player) > 2)
 
     # Beat Rival Rule
     badges = ["Boulder Badge", "Cascade Badge", "Thunder Badge", "Rainbow Badge", "Soul Badge", "Marsh Badge", "Volcano Badge", "Earth Badge"]

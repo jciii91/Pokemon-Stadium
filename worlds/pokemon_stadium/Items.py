@@ -22,7 +22,13 @@ def create_itempool(world: 'PokemonStadiumWorld') -> List[Item]:
     victory = create_item(world, 'Victory')
     world.multiworld.get_location('Beat Rival', world.player).place_locked_item(victory)
 
+    item_pool += create_multiple_items(world, 'Poké Cup - Tier Upgrade', 3, ItemClassification.progression)
+    item_pool += create_multiple_items(world, 'Prime Cup - Tier Upgrade', 3, ItemClassification.progression)
+
     item_pool += create_multiple_items(world, 'GLC PC Box Upgrade', 6, ItemClassification.useful)
+    item_pool += create_multiple_items(world, 'Poke Cup PC Box Upgrade', 6, ItemClassification.useful)
+    item_pool += create_multiple_items(world, 'Prime Cup PC Box Upgrade', 6, ItemClassification.useful)
+
     item_pool += create_junk_items(world, get_total_locations(world) - len(item_pool) - 1)
 
     return item_pool
@@ -99,12 +105,19 @@ gym_badge_codes = [
     10000016,
 ]
 
+cup_tier_upgrade_items = {
+    'Poké Cup - Tier Upgrade': ItemData(10000017, ItemClassification.progression),
+    'Prime Cup - Tier Upgrade': ItemData(10000018, ItemClassification.progression),
+}
+
 box_upgrade_items = {
-    'GLC PC Box Upgrade': ItemData(10000017, ItemClassification.useful),
+    'GLC PC Box Upgrade': ItemData(10000101, ItemClassification.useful),
+    'Poke Cup PC Box Upgrade' : ItemData(10000102, ItemClassification.useful),
+    'Prime Cup PC Box Upgrade' : ItemData(10000103, ItemClassification.useful),
 }
 
 junk_items = {
-    "Pokedoll": ItemData(20050011, ItemClassification.filler, 0),
+    "Pokedoll": ItemData(10000200, ItemClassification.filler, 0),
 }
 
 junk_weights = {
@@ -113,6 +126,7 @@ junk_weights = {
 
 item_table = {
     **pokemon_stadium_items,
+    **cup_tier_upgrade_items,
     **box_upgrade_items,
-    **junk_items
+    **junk_items,
 }
