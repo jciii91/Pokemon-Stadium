@@ -15,9 +15,9 @@ class DisplayDataWriter:
 
         display_stats = bytearray()
         new_displays_int = [int(x) for x in new_display_stats_set]
-        display = util.Util.calculate_stat(new_displays_int[0], evs[0], ivs[0], lvl) + 50 + 10
+        display = util.Util.calculate_hp_stat(new_displays_int[0], evs[0], ivs[0], lvl)
         display_stats.extend(display.to_bytes(2, "big"))
         for j in range(1, 5):
-            display = util.Util.calculate_stat(new_displays_int[j], evs[j], ivs[j], lvl) + 5
+            display = util.Util.calculate_stat(new_displays_int[j], evs[j], ivs[j], lvl)
             display_stats.extend(display.to_bytes(2, "big"))
         return display_stats
