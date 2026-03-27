@@ -206,7 +206,7 @@ class PokemonStadiumClient(BizHawkClient):
 
             cup_tier = sum(1 for net_item in ctx.items_received if net_item.item == cup_tier_item)
             await bizhawk.write(ctx.bizhawk_ctx, [(0x147018, [0x00, 0x00, 0x00, cup_tier], 'RDRAM')])
-        else:
+        elif cups_flag == 0:
             self.cups_loaded = False
 
         # GLC Boxes
