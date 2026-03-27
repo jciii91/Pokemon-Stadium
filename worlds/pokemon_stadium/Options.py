@@ -1,7 +1,7 @@
 from typing import List, Dict, Any
 from dataclasses import dataclass
 from worlds.AutoWorld import PerGameCommonOptions
-from Options import Choice, OptionGroup, Toggle, Range
+from Options import Choice, OptionGroup, Toggle, Range, OptionDict
 
 def create_option_groups() -> List[OptionGroup]:
     option_group_list: List[OptionGroup] = []
@@ -284,6 +284,18 @@ class RentalListShufflePikaCup(Choice):
     option_on = 2
     default = 2
 
+class PokemonNicknames(OptionDict):
+    """
+    Gives rental Pokemon custom nicknames. multiple nicknames are supported per-Pokemon; one will be picked randomly on generation.
+    Names must be 10 characters or less and only include the following characters:
+    ABCDEFGHIJKLMNOPQRSTUVWXYZ():;[]abcdefghijklmnopqrstuvwxyz'-+ ?!./,0123456789
+    format it like this...
+    names_options:
+        VOLTORB: [VOLTROB, ROBERTVOLT]
+
+    """
+    display_name = 'Pokemon Nicknames'
+    default = {"VOLTORB": ""}
 
 @dataclass
 class PokemonStadiumOptions(PerGameCommonOptions):
@@ -306,6 +318,7 @@ class PokemonStadiumOptions(PerGameCommonOptions):
     RentalListShufflePrimeCup:  RentalListShufflePrimeCup
     RentalListShufflePetitCup:  RentalListShufflePetitCup
     RentalListShufflePikaCup:   RentalListShufflePikaCup
+    PokemonNicknames:           PokemonNicknames
 
 
 # This is where you organize your options
@@ -315,6 +328,7 @@ pokemon_stadium_option_groups: Dict[str, List[Any]] = {
         VictoryCondition,
         BaseStatTotalRandomness,
         Trainersanity,  
+        PokemonNicknames
     ],
 
     "Enemy Trainer Pokemon Options": [
