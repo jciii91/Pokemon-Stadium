@@ -128,7 +128,8 @@ class PokemonStadiumWorld(World):
         )
 
         # === Step 4: Apply token modifications directly ===
-        write_tokens(self, patch)
+        players = self.multiworld.player_name
+        write_tokens(self, patch, players)
         procedure = [("apply_tokens", ["token_data.bin"])]
 
         # === Step 6: Finalize procedure ===

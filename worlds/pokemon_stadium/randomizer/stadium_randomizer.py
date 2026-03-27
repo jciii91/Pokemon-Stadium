@@ -11,10 +11,53 @@ from .levelFunctions import levelExpCalculator
 
 NOP = bytes([0x00,0x00,0x00,0x00])
 
+def nickname_pokemon(self, dex_id, dex_list):
+        pokemon_name = dex_list[dex_id]["name"].encode().ljust(11, b'\x00')
+        names_options = self.custom_nicknames["names_options"]
+        #check if this dex number has been chosen to be named after a player in the multiworld
+        try:
+            pokemon_name = self.player_dex_numbers[dex_id].encode().ljust(11, b'\x00')
+        except KeyError: #if key doesnt exist, try to select from yaml
+            species_name = dex_list[dex_id]["name"]
+            name_index = -1 
+            for i, value in enumerate(names_options): #get the index of the dictionary that corresponds to the current species name. put it in name_index if found. it stays at -1 otherwise
+                if(value.get(species_name, "") != ""):
+                    name_index = i
+            if(name_index != -1): #checks if a dict entry for this pokemon was found
+                numOfNicknames = len(names_options[name_index].get(species_name)) - 1
+                if(numOfNicknames >= 0): #checks if, for some odd reason, a pokemon was found in the dict but was not given any nicknames
+                    nickname = makeRomSafeNickname(self, names_options[name_index].get(species_name)[random.randint(0, numOfNicknames)])
+                    #print(nickname)
+                    pokemon_name = nickname.encode().ljust(11, b'\x00')
+        return pokemon_name
+
+def makeRomSafeNickname(self, pokemonName):
+    safeCharacters= ['A', 'B', 'C', 'D', 'E', 'F', 'G', 
+                    'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 
+                    'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
+                    '(', ')', ':', ';', '[', ']',
+                    'a', 'b', 'c', 'd', 'e', 'f', 'g',
+                    'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p',
+                    'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 
+                    #'à', 'è', 'é', 'ù', 'ß', 'ç', 'Ä', 'Ö', 'Ü',       #invalid/blank/control characters that are still defined in the rom (maybe reserved for other language versions of the game...?)
+                    #'ä', 'ö', 'ü', 'ë', 'ï', 'â', 'ô', 'û', 'ê', 'î',  #see above
+                    #'¼', '½','¥', '©', '¾', '×'                        #technically should show up fine but seemingly dont. not sure why, might be the way the python script injects it into the rom. disabled for now because i doubt anyone will miss em
+                    '\'', '-', '+', ' ', '?', '!', '.', '/', ',',
+                    '0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
+
+    pokemonNameList = list(pokemonName)
+    for i, value in enumerate(pokemonNameList):
+        if value not in safeCharacters:
+            pokemonNameList[i] = '?' #replace unsupported characters with a placeholder question mark
+    pokemonName = "".join(pokemonNameList)
+    pokemonName = pokemonName[:10] #truncate to 10 characters
+    return pokemonName
+    
+
 class Randomizer():
     def __init__(self, version="US_1.0", bst_factor=1, glc_trainer_factor=1, pokecup_trainer_factor=1, primecup_trainer_factor=1, petitcup_trainer_factor=1,
                  pikacup_trainer_factor=1, glc_rental_factor=1, pokecup_rental_factor=1, primecup_rental_factor=1, petitcup_rental_factor=1, pikacup_rental_factor=1,
-                 rental_list_shuffle_factor=1, rls_glc_factor=1, rls_poke_factor=1, rls_prime_factor=1, rls_petit_factor=1, rls_pika_factor=1):
+                 rental_list_shuffle_factor=1, rls_glc_factor=1, rls_poke_factor=1, rls_prime_factor=1, rls_petit_factor=1, rls_pika_factor=1, custom_nicknames=[], players=[]):
         self.version = version
         self.bst_factor = bst_factor
         self.glc_trainer_factor = glc_trainer_factor
@@ -33,6 +76,25 @@ class Randomizer():
         self.rls_prime_factor = rls_prime_factor
         self.rls_petit_factor = rls_petit_factor
         self.rls_pika_factor = rls_pika_factor
+        self.custom_nicknames = custom_nicknames
+        self.players = players
+
+
+        player_dex_numbers = {}     #create a new dict that stores player names in the pokedex number that they will be named after
+        if(len(self.players) > 149): #if there are more than 149 players in this multiworld, choose a random 149 to name mons after
+            self.players = random.sample(self.players, 149)
+        for i in self.players:
+            successful = 0
+            while(successful == 0):
+                pokedex_number = random.randint(1, 149)
+                try:    #checks to see if pokedex number happens to have already been chosen
+                    player_dex_numbers[pokedex_number]
+                    #print("oops!")
+                except KeyError: 
+                    player_dex_numbers[pokedex_number] = makeRomSafeNickname(self, self.players[i]) #ensure the player name is valid
+                    successful = 1        
+        #print(player_dex_numbers)
+        self.player_dex_numbers = player_dex_numbers
 
         self.evs = []
         self.ivs = []
@@ -601,7 +663,7 @@ class Randomizer():
             patch.write_token(APTokenTypes.WRITE, offset, bytes(disp))
             offset += len(disp)
 
-            pokemon_name = constants.kanto_dex_names[j]["name"].encode().ljust(11, b'\x00')
+            pokemon_name = nickname_pokemon(self, j, constants.kanto_dex_names)            
             patch.write_token(APTokenTypes.WRITE, offset, bytes(pokemon_name)) # Name
             offset += 11
 
@@ -689,7 +751,7 @@ class Randomizer():
             patch.write_token(APTokenTypes.WRITE, offset, bytes(disp))
             offset += len(disp)
 
-            pokemon_name = constants.kanto_dex_names[j]["name"].encode().ljust(11, b'\x00')
+            pokemon_name = nickname_pokemon(self, j, constants.kanto_dex_names) 
             patch.write_token(APTokenTypes.WRITE, offset, bytes(pokemon_name)) # Name
             offset += 11
 
@@ -776,7 +838,7 @@ class Randomizer():
             patch.write_token(APTokenTypes.WRITE, offset, bytes(disp))
             offset += len(disp)
 
-            pokemon_name = constants.prime_cup_list[j]["name"].encode().ljust(11, b'\x00')
+            pokemon_name = nickname_pokemon(self, j, constants.prime_cup_list) 
             patch.write_token(APTokenTypes.WRITE, offset, bytes(pokemon_name)) # Name
             offset += 11
 
@@ -864,7 +926,7 @@ class Randomizer():
             patch.write_token(APTokenTypes.WRITE, offset, bytes(disp))
             offset += len(disp)
 
-            pokemon_name = constants.petit_cup_list[j]["name"].encode().ljust(11, b'\x00')
+            pokemon_name = nickname_pokemon(self, j, constants.petit_cup_list) 
             patch.write_token(APTokenTypes.WRITE, offset, bytes(pokemon_name)) # Name
             offset += 11
 
@@ -952,7 +1014,7 @@ class Randomizer():
             patch.write_token(APTokenTypes.WRITE, offset, bytes(disp))
             offset += len(disp)
 
-            pokemon_name = constants.pika_cup_list[j]["name"].encode().ljust(11, b'\x00')
+            pokemon_name = nickname_pokemon(self, j, constants.pika_cup_list) 
             patch.write_token(APTokenTypes.WRITE, offset, bytes(pokemon_name)) # Name
             offset += 11
 
@@ -1057,7 +1119,7 @@ class Randomizer():
             current_pokemon_bytearray.extend(bytes(disp))
             offset += len(disp)
 
-            pokemon_name = constants.kanto_dex_names[j]["name"].encode().ljust(11, b'\x00')
+            pokemon_name = nickname_pokemon(self, j, constants.kanto_dex_names) 
             current_pokemon_bytearray.extend(bytes(pokemon_name))
             offset += 11
 
@@ -1170,7 +1232,7 @@ class Randomizer():
             current_pokemon_bytearray.extend(bytes(disp))
             offset += len(disp)
 
-            pokemon_name = constants.kanto_dex_names[j]["name"].encode().ljust(11, b'\x00')
+            pokemon_name = nickname_pokemon(self, j, constants.kanto_dex_names) 
             current_pokemon_bytearray.extend(bytes(pokemon_name))
             offset += 11
 
@@ -1284,7 +1346,7 @@ class Randomizer():
             current_pokemon_bytearray.extend(bytes(disp))
             offset += len(disp)
 
-            pokemon_name = constants.kanto_dex_names[j]["name"].encode().ljust(11, b'\x00')
+            pokemon_name = nickname_pokemon(self, j, constants.kanto_dex_names) 
             current_pokemon_bytearray.extend(bytes(pokemon_name))
             offset += 11
 
@@ -1398,7 +1460,7 @@ class Randomizer():
             current_pokemon_bytearray.extend(bytes(disp))
             offset += len(disp)
 
-            pokemon_name = constants.petit_cup_list[j]["name"].encode().ljust(11, b'\x00')
+            pokemon_name = nickname_pokemon(self, j, constants.petit_cup_list) 
             current_pokemon_bytearray.extend(bytes(pokemon_name))
             offset += 11
 
@@ -1512,7 +1574,7 @@ class Randomizer():
             current_pokemon_bytearray.extend(bytes(disp))
             offset += len(disp)
 
-            pokemon_name = constants.pika_cup_list[j]["name"].encode().ljust(11, b'\x00')
+            pokemon_name = nickname_pokemon(self, j, constants.pika_cup_list) 
             current_pokemon_bytearray.extend(bytes(pokemon_name))
             offset += 11
 

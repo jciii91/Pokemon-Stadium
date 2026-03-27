@@ -41,7 +41,7 @@ def get_base_rom_path():
         file_name = Utils.user_path(file_name)
     return file_name
 
-def write_tokens(world:World, patch:PokemonStadiumProcedurePatch):
+def write_tokens(world:World, patch:PokemonStadiumProcedurePatch, players):
     # version = settings['ROMVersion']
     bst_factor = world.options.BaseStatTotalRandomness.value
     glc_trainer_factor = world.options.GymCastleTrainerRandomness.value
@@ -60,10 +60,11 @@ def write_tokens(world:World, patch:PokemonStadiumProcedurePatch):
     rental_list_shuffle_prime_cup_factor = world.options.RentalListShufflePrimeCup.value
     rental_list_shuffle_petit_cup_factor = world.options.RentalListShufflePetitCup.value
     rental_list_shuffle_pika_cup_factor = world.options.RentalListShufflePikaCup.value
+    custom_nicknames = world.options.PokemonNicknames.value
     randomizer = stadium_randomizer.Randomizer('US_1.0', bst_factor, glc_trainer_factor, glc_rental_factor, pokecup_trainer_factor, primecup_trainer_factor, petitcup_trainer_factor, 
                                                pikacup_trainer_factor, pokecup_rental_factor, primecup_rental_factor,petitcup_rental_factor, pikacup_rental_factor, 
                                                rental_list_shuffle_factor, rental_list_shuffle_glc_factor, rental_list_shuffle_poke_cup_factor, rental_list_shuffle_prime_cup_factor, 
-                                               rental_list_shuffle_petit_cup_factor, rental_list_shuffle_pika_cup_factor)
+                                               rental_list_shuffle_petit_cup_factor, rental_list_shuffle_pika_cup_factor, custom_nicknames, players)
 
     # Bypass CIC
     randomizer.disable_checksum(patch)
