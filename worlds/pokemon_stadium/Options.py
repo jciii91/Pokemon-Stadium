@@ -295,7 +295,7 @@ class PokemonNicknames(OptionDict):
 
     """
     display_name = 'Pokemon Nicknames'
-    default = {"VOLTORB": ""}
+    default = {}
 
 @dataclass
 class PokemonStadiumOptions(PerGameCommonOptions):
