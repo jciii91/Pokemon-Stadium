@@ -6,7 +6,11 @@ class Util:
 
     @staticmethod
     def calculate_stat(stat, ev, iv, level):
-        return int((((stat + iv) * 2 + math.ceil(math.sqrt(ev) / 4)) * level)/100)
+        return int((((stat + iv) * 2 + math.floor(math.ceil(math.sqrt(ev)) / 4)) * level)/100) + 5
+    
+    @staticmethod
+    def calculate_hp_stat(stat, ev, iv, level):
+        return int((((stat + iv) * 2 + math.floor(math.ceil(math.sqrt(ev)) / 4)) * level)/100) + level + 10
 
     @staticmethod
     def random_int_set(min_val, max_val, count):
