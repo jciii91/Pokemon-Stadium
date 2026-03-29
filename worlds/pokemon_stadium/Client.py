@@ -75,8 +75,8 @@ class PokemonStadiumClient(BizHawkClient):
         battle_info = await bizhawk.read(ctx.bizhawk_ctx, [(0x0AE540, 4, 'RDRAM')])
         mode = int(battle_info[0].hex()[:2])
         gym_info = battle_info[0].hex()[4:]
-        gym_number = int(battle_info[0].hex()[4:7])
-        trainer_index = int(battle_info[0].hex()[7:])
+        gym_number = int(battle_info[0].hex()[4:6])
+        trainer_index = int(battle_info[0].hex()[6:])
 
         if player_has_battled:
             player_won = all(x == b'\x00' for x in flags[5:8])
