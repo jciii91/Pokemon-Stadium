@@ -396,8 +396,13 @@ class PokemonStadiumClient(BizHawkClient):
         # Determine LEFT: is Sabrina unlocked
         left = 6 if 6 in self.unlocked_gyms else 0
 
-        # Determine RIGHT: is Giovanni unlocked
-        right = 8 if 8 in self.unlocked_gyms else 0
+        # Determine RIGHT: is Giovanni unlocked or do you have all badges needed
+        if 8 in self.unlocked_gyms:
+            right = 8
+        elif 9 in self.unlocked_gyms:
+            right = 9
+        else:
+            right = 0
 
         await bizhawk.write(ctx.bizhawk_ctx, [(self.GLC_CURSOR_TARGETS[6], [0x00, down, left, right], 'RDRAM')])
 
