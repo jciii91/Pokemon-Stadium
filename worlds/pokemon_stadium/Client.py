@@ -73,7 +73,12 @@ class PokemonStadiumClient(BizHawkClient):
 
         player_has_battled = flags[1] != b'\x00\x00\x00\x00'
         battle_info = await bizhawk.read(ctx.bizhawk_ctx, [(0x0AE540, 4, 'RDRAM')])
-        mode = int(battle_info[0].hex()[:2])
+
+        try:
+            mode = int(battle_info[0].hex()[:2])
+        except ValueError:
+            return
+
         gym_info = battle_info[0].hex()[4:]
         gym_number = int(battle_info[0].hex()[4:6])
         trainer_index = int(battle_info[0].hex()[6:])
@@ -190,6 +195,7 @@ class PokemonStadiumClient(BizHawkClient):
         elif glc_flag != 2 and self.glc_loaded:
             self.glc_loaded = False
 
+        # Check if Rival cleared. #TODO include this in the GLC clears above
         text = flags[2].decode("ascii", errors="ignore")
         if text == 'Magnificent!':
             await ctx.check_locations(set([event_locations['Beat Rival'].ap_code]))
@@ -241,6 +247,10 @@ class PokemonStadiumClient(BizHawkClient):
             table_size = 29 + 20 * box_count
 
             await bizhawk.write(ctx.bizhawk_ctx, [(address, [table_size], 'RDRAM')])
+
+        master_ball_locations = set('Poké Cup - Master Ball - Prize', 'Prime Cup - Master Ball - Prize')
+        if master_ball_locations <= ctx.checked_locations:
+            await ctx.check_locations(set([event_locations['Master Ball Cups Cleared'].ap_code]))
 
         # Minigames
         if flags[3].startswith(b'\x00\x03\x00') and flags[3][3] in range(9):
