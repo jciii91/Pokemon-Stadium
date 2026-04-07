@@ -13,14 +13,18 @@ if TYPE_CHECKING:
 def create_itempool(world: 'PokemonStadiumWorld') -> List[Item]:
     item_pool: List[Item] = []
 
-    # This is a good place to grab anything you need from options
+    # Place items dependent on options
+    victory_condition = world.options.VictoryCondition.value
+    victory = create_item(world, 'Victory')
+
+    if victory_condition == 1:
+        world.multiworld.get_location('Beat Rival', world.player).place_locked_item(victory)
+    elif victory_condition == 2:
+        world.multiworld.get_location('Master Ball Cups Cleared', world.player).place_locked_item(victory)
 
     for name in pokemon_stadium_items:
         if name != 'Victory' and name not in world.starting_gym_keys:
             item_pool.append(create_item(world, name))
-
-    victory = create_item(world, 'Victory')
-    world.multiworld.get_location('Beat Rival', world.player).place_locked_item(victory)
 
     item_pool += create_multiple_items(world, 'Poké Cup - Tier Upgrade', 3, ItemClassification.progression)
     item_pool += create_multiple_items(world, 'Prime Cup - Tier Upgrade', 3, ItemClassification.progression)
