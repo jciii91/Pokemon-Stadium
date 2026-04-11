@@ -248,7 +248,7 @@ class PokemonStadiumClient(BizHawkClient):
 
             await bizhawk.write(ctx.bizhawk_ctx, [(address, [table_size], 'RDRAM')])
 
-        master_ball_locations = set('Poké Cup - Master Ball - Prize', 'Prime Cup - Master Ball - Prize')
+        master_ball_locations = set(['Poké Cup - Master Ball - Prize', 'Prime Cup - Master Ball - Prize'])
         if master_ball_locations <= ctx.checked_locations:
             await ctx.check_locations(set([event_locations['Master Ball Cups Cleared'].ap_code]))
 
