@@ -21,6 +21,8 @@ def create_itempool(world: 'PokemonStadiumWorld') -> List[Item]:
         world.multiworld.get_location('Beat Rival', world.player).place_locked_item(victory)
     elif victory_condition == 2:
         world.multiworld.get_location('Master Ball Cups Cleared', world.player).place_locked_item(victory)
+    elif victory_condition == 3:
+        world.multiworld.get_location('Beat Rival and Clear Both Master Ball Cups', world.player).place_locked_item(victory)
 
     for name in pokemon_stadium_items:
         if name != 'Victory' and name not in world.starting_gym_keys:

@@ -128,5 +128,10 @@ def set_rules(world: "PokemonStadiumWorld"):
     badges = ["Boulder Badge", "Cascade Badge", "Thunder Badge", "Rainbow Badge", "Soul Badge", "Marsh Badge", "Volcano Badge", "Earth Badge"]
     set_rule(world.multiworld.get_location("Beat Rival", player), lambda state: state.has_all(badges, player))
 
+    # Master Ball Cups Cleared Rule
+    collected_all_poke_cup_tiers = lambda state: state.count('Poké Cup - Tier Upgrade', player) > 2
+    collected_all_prime_cup_tiers = lambda state: state.count('Prime Cup - Tier Upgrade', player) > 2
+    set_rule(world.multiworld.get_location("Master Ball Cups Cleared", player), collected_all_poke_cup_tiers and collected_all_prime_cup_tiers)
+
     # Victory condition rule!
     world.multiworld.completion_condition[player] = lambda state: state.has("Victory", player)

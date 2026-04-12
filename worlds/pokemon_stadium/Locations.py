@@ -73,8 +73,9 @@ pokemon_stadium_locations = {
 }
 
 event_locations = {
-    'Beat Rival':               LocData(20000000, 'Hall of Fame'),
-    'Master Ball Cups Cleared': LocData(20000001, 'Hall of Fame'),
+    'Beat Rival':                                   LocData(20000000, 'Hall of Fame'),
+    'Master Ball Cups Cleared':                     LocData(20000001, 'Hall of Fame'),
+    'Beat Rival and Clear Both Master Ball Cups':   LocData(20000002, 'Hall of Fame'),
 }
 
 trainersanity_locations = {

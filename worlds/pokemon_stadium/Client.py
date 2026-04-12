@@ -269,6 +269,11 @@ class PokemonStadiumClient(BizHawkClient):
 
             self.minigame_check_sent = True
 
+        # Check if GLC and Master Ball Cups are cleared
+        rival_and_cup_locations = set(['Beat Rival', 'Master Ball Cups Cleared'])
+        if rival_and_cup_locations <= ctx.checked_locations:
+            await ctx.check_locations(set([event_locations['Beat Rival and Clear Both Master Ball Cups'].ap_code]))
+
         # Send game clear
         if not ctx.finished_game and pokemon_stadium_items['Victory'].ap_code in item_codes:
             ctx.finished_game = True
