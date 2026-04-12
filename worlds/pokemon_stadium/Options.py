@@ -12,11 +12,12 @@ def create_option_groups() -> List[OptionGroup]:
 
 class VictoryCondition(Choice):
     """
-    Choose victory condition. Defeat the Rival at the end of Gym Leader Castle or clear Poké and Prime Master Ball Cups
+    Choose victory condition. Defeat the Rival at the end of Gym Leader Castle, clear Poké and Prime Master Ball Cups, or both.
     """
     display_name = "Victory Condition"
     option_defeat_rival = 1
     option_clear_master_ball_cups = 2
+    option_rival_and_both_cups = 3
     default = 1
 
 class BaseStatTotalRandomness(Choice):
