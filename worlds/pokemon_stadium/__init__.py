@@ -52,7 +52,6 @@ class PokemonStadiumWorld(World):
     location_name_to_id = get_location_names()
 
     options_dataclass = PokemonStadiumOptions
-    options = PokemonStadiumOptions
 
     web = PokemonStadiumWeb()
 
