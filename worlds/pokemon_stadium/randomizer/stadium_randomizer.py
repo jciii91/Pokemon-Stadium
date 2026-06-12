@@ -644,7 +644,7 @@ class Randomizer():
             offset += 1
 
             # Random moveset
-            bst_list = constants.poke_cup_list[j]["bst"]
+            bst_list = constants.kanto_dex_names[j]["bst"]
             factor = self.pokecup_rental_factor
             new_attacks = randomMovesetGenerator.MovesetGenerator.get_random_moveset(bst_list, factor, pkm_type)
             for attack in new_attacks:
@@ -660,7 +660,7 @@ class Randomizer():
             patch.write_token(APTokenTypes.WRITE, offset, bytes.fromhex("00"))
             offset += 1
 
-            exp_bytes = int.to_bytes(int(constants.poke_cup_list[j]["exp"]), 3, "big")
+            exp_bytes = int.to_bytes(int(constants.kanto_dex_names[j]["exp"]), 3, "big")
             patch.write_token(APTokenTypes.WRITE, offset, bytes(exp_bytes)) # Experience
             offset += 3
 
@@ -1015,7 +1015,7 @@ class Randomizer():
                     current_pokemon_bytearray.extend(bytes([attack]))
                     offset += 1
             else:
-                for attack in constants.GLC_list[j]["Moveset"]:
+                for attack in constants.vanilla_movesets[j]["GLC"]:
                     current_pokemon_bytearray.extend(bytes([attack]))
                     offset += 1
 
@@ -1129,7 +1129,7 @@ class Randomizer():
                     current_pokemon_bytearray.extend(bytes([attack]))
                     offset += 1
             else:
-                for attack in constants.poke_cup_list[j]["Moveset"]:
+                for attack in constants.vanilla_movesets[j]["PokeCup"]:
                     current_pokemon_bytearray.extend(bytes([attack]))
                     offset += 1
             current_pokemon_bytearray.extend(bytes.fromhex("00"))
