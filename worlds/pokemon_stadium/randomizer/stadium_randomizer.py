@@ -108,7 +108,8 @@ class Randomizer():
 
                     offset += 4  # Seek forward by 4 bytes
 
-                    exp = int.to_bytes(int(constants.kanto_dex_names[pokedex_num]["exp"]), 3, "big")
+                    growth_rate = constants.kanto_dex_names[pokedex_num]["gr"]
+                    exp = int.to_bytes(int(constants.growth_rates[growth_rate][50]), 3, "big")
                     patch.write_token(APTokenTypes.WRITE, offset, exp)
                     offset += 3
 
@@ -183,8 +184,10 @@ class Randomizer():
 
                     offset += 4  # Seek forward by 4 bytes
 
+                    growth_rate = constants.kanto_dex_names[pokedex_num]["gr"]
+                    xp = constants.growth_rates[growth_rate][50]
                     if(q == 0): #poke cup pokeball round 1, level 50
-                        exp = int.to_bytes(int(constants.kanto_dex_names[pokedex_num]["exp"]), 3, "big")
+                        exp = int.to_bytes(int(xp), 3, "big")
                         patch.write_token(APTokenTypes.WRITE, offset, exp)
                         offset += 3
 
@@ -202,7 +205,7 @@ class Randomizer():
                         offset += len(disp)
 
                     elif(q == 1): #poke cup great ball round 1, level 51
-                        exp = int.to_bytes(int(levelExpCalculator.getExpValue(51, constants.kanto_dex_names[pokedex_num]["gr"])), 3, "big")
+                        exp = int.to_bytes(int(levelExpCalculator.getExpValue(51, xp)), 3, "big")
                         patch.write_token(APTokenTypes.WRITE, offset, exp)
                         offset += 3
 
@@ -220,7 +223,8 @@ class Randomizer():
                         offset += len(disp)
 
                     elif(q == 2): #poke cup ultra ball round 1, mixed levels
-                        exp = int.to_bytes(int(levelExpCalculator.getExpValue(constants.pokecupr1_ultra_levels[_][s], constants.kanto_dex_names[pokedex_num]["gr"])), 3, "big")
+                        level = constants.pokecupr1_ultra_levels[_][s]
+                        exp = int.to_bytes(int(levelExpCalculator.getExpValue(level, xp)), 3, "big")
                         patch.write_token(APTokenTypes.WRITE, offset, exp)
                         offset += 3
 
@@ -233,12 +237,13 @@ class Randomizer():
                         new_stats = self.new_display_stats[pokedex_num]
                         evs = self.evs[pokedex_num]
                         ivs = self.ivs[pokedex_num]
-                        disp = writeDisplayData.DisplayDataWriter.write_gym_tower_display(new_stats, evs, ivs, constants.pokecupr1_ultra_levels[_][s])
+                        disp = writeDisplayData.DisplayDataWriter.write_gym_tower_display(new_stats, evs, ivs, level)
                         patch.write_token(APTokenTypes.WRITE, offset, bytes(disp))
                         offset += len(disp)
 
                     elif(q == 3): #poke cup master ball round 1, mixed levels
-                        exp = int.to_bytes(int(levelExpCalculator.getExpValue(constants.pokecupr1_master_levels[_][s], constants.kanto_dex_names[pokedex_num]["gr"])), 3, "big")
+                        level = constants.pokecupr1_master_levels[_][s]
+                        exp = int.to_bytes(int(levelExpCalculator.getExpValue(level, xp)), 3, "big")
                         patch.write_token(APTokenTypes.WRITE, offset, exp)
                         offset += 3
 
@@ -251,7 +256,7 @@ class Randomizer():
                         new_stats = self.new_display_stats[pokedex_num]
                         evs = self.evs[pokedex_num]
                         ivs = self.ivs[pokedex_num]
-                        disp = writeDisplayData.DisplayDataWriter.write_gym_tower_display(new_stats, evs, ivs, constants.pokecupr1_master_levels[_][s])
+                        disp = writeDisplayData.DisplayDataWriter.write_gym_tower_display(new_stats, evs, ivs, level)
                         patch.write_token(APTokenTypes.WRITE, offset, bytes(disp))
                         offset += len(disp)
 
@@ -313,7 +318,8 @@ class Randomizer():
                     offset += 4  # Seek forward by 4 bytes
 
 
-                    exp = int.to_bytes(int(constants.prime_cup_list[pokedex_num]["exp"]), 3, "big")
+                    growth_rate = constants.kanto_dex_names[pokedex_num]["gr"]
+                    exp = int.to_bytes(int(constants.growth_rates[growth_rate][100]), 3, "big")
                     patch.write_token(APTokenTypes.WRITE, offset, exp)
                     offset += 3
 
@@ -444,30 +450,27 @@ class Randomizer():
         offset = constants.rom_offsets[self.version]["PikaCup_Round1"]
         team_count = 8
         for _ in range(team_count):
-            new_team = random.sample(constants.pika_cup_list, 6)
+            new_team_nums = random.sample(constants.pika_cup_indexes, 6)
+            new_team = [constants.kanto_dex_names[new_team_nums[i]] for i in range(0, 6)]
             for s in range(6):
-                #There is probably a much better way to do this, but oh well
-                #We break down each required aspect from a pokemon, save them to a variable, and then 
-                #we do the bytes() command using the saved variable instead of the list because the list
-                #breaks for some reason idrk why
-                pokemonInfo = new_team[s]
-                currentPokeDexNum = pokemonInfo["DexNum"]
-                currentPokeType = pokemonInfo["type"]
-                currentPokeName = pokemonInfo["name"]
+                pokemon_info = new_team[s]
+                dex_num = new_team_nums[s]
+                pokemon_type = pokemon_info["type"]
+                pokemon_name = pokemon_info["name"]
 
-                patch.write_token(APTokenTypes.WRITE, offset, int.to_bytes(currentPokeDexNum))  # Write Pokémon index
+                patch.write_token(APTokenTypes.WRITE, offset, int.to_bytes(dex_num + 1))  # Write Pokémon index
                 offset += 1
 
                 offset += 5  # Seek forward by 5 bytes
 
-                new_type = bytes.fromhex(currentPokeType)
+                new_type = bytes.fromhex(pokemon_type)
                 patch.write_token(APTokenTypes.WRITE, offset, bytes(new_type)) # Write Pokémon type
                 offset += len(new_type)
 
                 offset += 1  # Seek forward by 1 byte
 
                 # Random moveset
-                bst = self.bst_list[currentPokeDexNum - 1]
+                bst = self.bst_list[dex_num]
                 factor = self.pikacup_trainer_factor
                 new_attacks = randomMovesetGenerator.MovesetGenerator.get_random_moveset(bst, factor, new_type)
                 for attack in new_attacks:
@@ -477,37 +480,37 @@ class Randomizer():
                 offset += 4  # Seek forward by 4 bytes
 
 
-                exp = int.to_bytes(int(levelExpCalculator.getExpValue(constants.pikacupr1_levels[_][s], constants.kanto_dex_names[currentPokeDexNum-1]["gr"])), 3, "big")
+                exp = int.to_bytes(int(levelExpCalculator.getExpValue(constants.pikacupr1_levels[_][s], constants.kanto_dex_names[dex_num]["gr"])), 3, "big")
                 patch.write_token(APTokenTypes.WRITE, offset, exp)
                 offset += 3
 
                 for t in range(5):
-                    ev = int.to_bytes(self.evs[currentPokeDexNum-1][t], 2, "big")
+                    ev = int.to_bytes(self.evs[dex_num][t], 2, "big")
                     patch.write_token(APTokenTypes.WRITE, offset, ev)
                     offset += 2
 
-                ivs_bytes = bytes.fromhex(self.ivs[currentPokeDexNum-1])
+                ivs_bytes = bytes.fromhex(self.ivs[dex_num])
                 patch.write_token(APTokenTypes.WRITE, offset, ivs_bytes)
                 offset += len(ivs_bytes)
 
                 offset += 6  # Seek forward by 6 bytes
 
-                new_stats = self.new_display_stats[currentPokeDexNum - 1]
-                evs = self.evs[currentPokeDexNum-1]
-                ivs = self.ivs[currentPokeDexNum-1]
+                new_stats = self.new_display_stats[dex_num]
+                evs = self.evs[dex_num]
+                ivs = self.ivs[dex_num]
                 disp = writeDisplayData.DisplayDataWriter.write_gym_tower_display(new_stats, evs, ivs, constants.pikacupr1_levels[_][s])
                 patch.write_token(APTokenTypes.WRITE, offset, bytes(disp))
                 offset += len(disp)
 
-                pokemon_name = currentPokeName.encode()
+                pokemon_name = pokemon_name.encode()
                 patch.write_token(APTokenTypes.WRITE, offset, bytes(pokemon_name))
                 offset += len(pokemon_name)
 
-                if (currentPokeDexNum == 29):
+                if (dex_num == 28):
                     patch.write_token(APTokenTypes.WRITE, offset, bytes.fromhex("BE")) # Female symbol
                     offset += 1
                     pokemon_name += b" "
-                elif (currentPokeDexNum == 32):
+                elif (dex_num == 31):
                     patch.write_token(APTokenTypes.WRITE, offset, bytes.fromhex("A9")) # Male symbol
                     offset += 1
                     pokemon_name += b" "
@@ -572,7 +575,8 @@ class Randomizer():
             patch.write_token(APTokenTypes.WRITE, offset, bytes.fromhex("00"))
             offset += 1
 
-            exp_bytes = int.to_bytes(int(constants.kanto_dex_names[j]["exp"]), 3, "big")
+            growth_rate = constants.kanto_dex_names[j]["gr"]
+            exp_bytes = int.to_bytes(int(constants.growth_rates[growth_rate][50]), 3, "big")
             patch.write_token(APTokenTypes.WRITE, offset, bytes(exp_bytes)) # Experience
             offset += 3
 
@@ -660,7 +664,8 @@ class Randomizer():
             patch.write_token(APTokenTypes.WRITE, offset, bytes.fromhex("00"))
             offset += 1
 
-            exp_bytes = int.to_bytes(int(constants.kanto_dex_names[j]["exp"]), 3, "big")
+            growth_rate = constants.kanto_dex_names[j]["gr"]
+            exp_bytes = int.to_bytes(int(constants.growth_rates[growth_rate][50]), 3, "big")
             patch.write_token(APTokenTypes.WRITE, offset, bytes(exp_bytes)) # Experience
             offset += 3
 
@@ -747,7 +752,8 @@ class Randomizer():
             patch.write_token(APTokenTypes.WRITE, offset, bytes.fromhex("00"))
             offset += 1
 
-            exp_bytes = int.to_bytes(int(constants.prime_cup_list[j]["exp"]), 3, "big")
+            growth_rate = constants.kanto_dex_names[j]["gr"]
+            exp_bytes = int.to_bytes(int(constants.growth_rates[growth_rate][100]), 3, "big")
             patch.write_token(APTokenTypes.WRITE, offset, bytes(exp_bytes)) # Experience
             offset += 3
 
@@ -834,7 +840,8 @@ class Randomizer():
             patch.write_token(APTokenTypes.WRITE, offset, bytes.fromhex("00"))
             offset += 1
 
-            exp_bytes = int.to_bytes(int(constants.petit_cup_list[j]["exp"]), 3, "big")
+            growth_rate = constants.kanto_dex_names[j]["gr"]
+            exp_bytes = int.to_bytes(int(constants.growth_rates[growth_rate][25]), 3, "big")
             patch.write_token(APTokenTypes.WRITE, offset, bytes(exp_bytes)) # Experience
             offset += 3
 
@@ -922,7 +929,8 @@ class Randomizer():
             patch.write_token(APTokenTypes.WRITE, offset, bytes.fromhex("00"))
             offset += 1
 
-            exp_bytes = int.to_bytes(int(constants.pika_cup_list[j]["exp"]), 3, "big")
+            growth_rate = constants.kanto_dex_names[j]["gr"]
+            exp_bytes = int.to_bytes(int(constants.growth_rates[growth_rate][15]), 3, "big")
             patch.write_token(APTokenTypes.WRITE, offset, bytes(exp_bytes)) # Experience
             offset += 3
 
@@ -1028,7 +1036,8 @@ class Randomizer():
             current_pokemon_bytearray.extend(bytes.fromhex("00"))
             offset += 1
 
-            exp_bytes = int.to_bytes(int(constants.kanto_dex_names[j]["exp"]), 3, "big")
+            growth_rate = constants.kanto_dex_names[j]["gr"]
+            exp_bytes = int.to_bytes(int(constants.growth_rates[growth_rate][50]), 3, "big")
             current_pokemon_bytearray.extend(bytes(exp_bytes))
             offset += 3
 
@@ -1141,7 +1150,8 @@ class Randomizer():
             current_pokemon_bytearray.extend(bytes.fromhex("00"))
             offset += 1
 
-            exp_bytes = int.to_bytes(int(constants.kanto_dex_names[j]["exp"]), 3, "big")
+            growth_rate = constants.kanto_dex_names[j]["gr"]
+            exp_bytes = int.to_bytes(int(constants.growth_rates[growth_rate][50]), 3, "big")
             current_pokemon_bytearray.extend(bytes(exp_bytes))
             offset += 3
 
@@ -1255,7 +1265,8 @@ class Randomizer():
             current_pokemon_bytearray.extend(bytes.fromhex("00"))
             offset += 1
 
-            exp_bytes = int.to_bytes(int(constants.prime_cup_list[j]["exp"]), 3, "big")
+            growth_rate = constants.kanto_dex_names[j]["gr"]
+            exp_bytes = int.to_bytes(int(constants.growth_rates[growth_rate][100]), 3, "big")
             current_pokemon_bytearray.extend(bytes(exp_bytes))
             offset += 3
 
@@ -1369,7 +1380,8 @@ class Randomizer():
             current_pokemon_bytearray.extend(bytes.fromhex("00"))
             offset += 1
 
-            exp_bytes = int.to_bytes(int(constants.petit_cup_list[j]["exp"]), 3, "big")
+            growth_rate = constants.kanto_dex_names[j]["gr"]
+            exp_bytes = int.to_bytes(int(constants.growth_rates[growth_rate][25]), 3, "big")
             current_pokemon_bytearray.extend(bytes(exp_bytes))
             offset += 3
             currentPokeDexNum = constants.petit_cup_list[j]["DexNum"]
@@ -1483,7 +1495,8 @@ class Randomizer():
             current_pokemon_bytearray.extend(bytes.fromhex("00"))
             offset += 1
 
-            exp_bytes = int.to_bytes(int(constants.pika_cup_list[j]["exp"]), 3, "big")
+            growth_rate = constants.kanto_dex_names[j]["gr"]
+            exp_bytes = int.to_bytes(int(constants.growth_rates[growth_rate][15]), 3, "big")
             current_pokemon_bytearray.extend(bytes(exp_bytes))
             offset += 3
             currentPokeDexNum = constants.pika_cup_list[j]["DexNum"]
