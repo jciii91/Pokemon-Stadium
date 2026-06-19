@@ -90,20 +90,6 @@ def write_tokens(world:World, patch:PokemonStadiumProcedurePatch):
         randomizer.randomize_petitcup_rentals(patch)
     if pikacup_rental_factor > 1:
         randomizer.randomize_pikacup_rentals(patch)
-    if rental_list_shuffle_factor > 1:
-        if rental_list_shuffle_factor != 3: #Not in manual mode
-            randomizer.shuffle_rentals(patch)
-        else:
-            if rental_list_shuffle_glc_factor > 1:
-                randomizer.shuffle_glc(patch)
-            if rental_list_shuffle_poke_cup_factor > 1:
-                randomizer.shuffle_poke(patch)
-            if rental_list_shuffle_prime_cup_factor > 1:
-                randomizer.shuffle_prime(patch)
-            if rental_list_shuffle_petit_cup_factor > 1:
-                randomizer.shuffle_petit(patch)
-            if rental_list_shuffle_pika_cup_factor > 1:
-                randomizer.shuffle_pika(patch)
 
     # Set GP Register to 80420000
     patch.write_token(APTokenTypes.WRITE, 0x202B8, bytes([0x3C, 0x1C, 0x80, 0x42]))
