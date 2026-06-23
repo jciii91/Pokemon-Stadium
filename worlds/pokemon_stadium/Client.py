@@ -248,8 +248,9 @@ class PokemonStadiumClient(BizHawkClient):
 
             await bizhawk.write(ctx.bizhawk_ctx, [(address, [table_size], 'RDRAM')])
 
-        master_ball_locations = set(['Poké Cup - Master Ball - Prize', 'Prime Cup - Master Ball - Prize'])
-        if master_ball_locations <= ctx.checked_locations:
+        poke_cup_prize = pokemon_stadium_locations['Poké Cup - Master Ball - Prize'].ap_code
+        prime_cup_prize = pokemon_stadium_locations['Prime Cup - Master Ball - Prize'].ap_code
+        if poke_cup_prize in ctx.checked_locations and prime_cup_prize in ctx.checked_locations:
             await ctx.check_locations(set([event_locations['Master Ball Cups Cleared'].ap_code]))
 
         # Minigames
