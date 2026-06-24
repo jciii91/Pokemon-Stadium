@@ -20,6 +20,15 @@ class VictoryCondition(Choice):
     option_rival_and_both_cups = 3
     default = 1
 
+class BadgeRequirement(Range):
+    """
+    Choose how many badges are required to enter the Gym Leader Castle. The default is 8, which is the vanilla requirement.
+    """
+    display_name = "Badge Requirement"
+    range_start = 0
+    range_end = 8
+    default = 8
+
 class BaseStatTotalRandomness(Choice):
     """
     Controls the level of randomness for Pokemon BST. Stat distribution per Pokemon will follow a randomly selected distribution curve.
@@ -289,6 +298,7 @@ class RentalListShufflePikaCup(Choice):
 @dataclass
 class PokemonStadiumOptions(PerGameCommonOptions):
     VictoryCondition:           VictoryCondition
+    BadgeRequirement:           BadgeRequirement
     BaseStatTotalRandomness:    BaseStatTotalRandomness
     Trainersanity:              Trainersanity
     GymCastleTrainerRandomness: GymCastleTrainerRandomness
@@ -314,6 +324,7 @@ class PokemonStadiumOptions(PerGameCommonOptions):
 pokemon_stadium_option_groups: Dict[str, List[Any]] = {
     "General Options": [
         VictoryCondition,
+        BadgeRequirement,
         BaseStatTotalRandomness,
         Trainersanity,  
     ],

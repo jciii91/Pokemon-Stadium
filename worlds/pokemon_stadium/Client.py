@@ -146,7 +146,11 @@ class PokemonStadiumClient(BizHawkClient):
             ]
 
             self.unlocked_gyms = [i + 1 for i, code in enumerate(gym_codes) if code in item_codes]
-            victory_road_open = set(gym_badge_codes).issubset(item_codes)
+
+            # Count badges obtained
+            badge_count = sum(1 for badge_code in gym_badge_codes if badge_code in item_codes)
+            badge_requirement = ctx.slot_data.get("badge_requirement", 8)  # Default to 8 if not provided
+            victory_road_open = badge_count >= badge_requirement
             if victory_road_open:
                 self.unlocked_gyms.append(9)
 

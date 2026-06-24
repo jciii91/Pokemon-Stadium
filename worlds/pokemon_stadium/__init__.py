@@ -80,6 +80,7 @@ class PokemonStadiumWorld(World):
         slot_data: Dict[str, object] = {
             "options": {
                 "VictoryCondition":             self.options.VictoryCondition.value,
+                "BadgeRequirement":             self.options.BadgeRequirement.value,
                 "BaseStatTotalRandomness":      self.options.BaseStatTotalRandomness.value,
                 "Trainersanity":                self.options.Trainersanity.value,
                 "GymCastleTrainerRandomness":   self.options.GymCastleTrainerRandomness.value,

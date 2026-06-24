@@ -1,4 +1,4 @@
-from worlds.generic.Rules import set_rule, add_item_rule
+from worlds.generic.Rules import set_rule
 from typing import TYPE_CHECKING, List, Tuple
 
 if TYPE_CHECKING:
@@ -58,8 +58,9 @@ def set_rules(world: "PokemonStadiumWorld"):
 
     # Beat Rival Rule
     badges = ["Boulder Badge", "Cascade Badge", "Thunder Badge", "Rainbow Badge", "Soul Badge", "Marsh Badge", "Volcano Badge", "Earth Badge"]
-    has_all_badges = lambda state: state.has_all(badges, player)
-    set_rule(world.multiworld.get_location("Beat Rival", player), has_all_badges)
+    badge_requirement = world.options.BadgeRequirement.value
+    has_enough_badges = lambda state: state.has_from_list(badges, player, badge_requirement)
+    set_rule(world.multiworld.get_location("Beat Rival", player), has_enough_badges)
 
     # Master Ball Cups Cleared Rule
     collected_all_poke_cup_tiers = lambda state: state.count('Poké Cup - Tier Upgrade', player) > 2
@@ -67,7 +68,7 @@ def set_rules(world: "PokemonStadiumWorld"):
     set_rule(world.multiworld.get_location("Master Ball Cups Cleared", player), collected_all_poke_cup_tiers and collected_all_prime_cup_tiers)
 
     # Rival + Cups Rule
-    full_clear = has_all_badges and collected_all_poke_cup_tiers and collected_all_prime_cup_tiers
+    full_clear = has_enough_badges and collected_all_poke_cup_tiers and collected_all_prime_cup_tiers
     set_rule(world.multiworld.get_location('Beat Rival and Clear Both Master Ball Cups', player), full_clear)
 
     # Victory condition rule!
