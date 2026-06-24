@@ -55,12 +55,13 @@ class PokemonStadiumWorld(World):
 
     web = PokemonStadiumWeb()
 
-    starting_gym_keys = random.sample(gym_keys, 3)
+    starting_gym_keys: list[str] = []
 
     def __init__(self, multiworld: "MultiWorld", player: int):
         super().__init__(multiworld, player)
 
     def generate_early(self):
+        self.starting_gym_keys = random.sample(gym_keys, self.options.StartingKeyCount.value)
         for key in self.starting_gym_keys:
             self.multiworld.push_precollected(self.create_item(key))
 

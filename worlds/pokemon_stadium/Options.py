@@ -29,6 +29,15 @@ class BadgeRequirement(Range):
     range_end = 8
     default = 8
 
+class StartingKeyCount(Range):
+    """
+    Choose how many Gym Keys you start with. The default is 3.
+    """
+    display_name = "Starting Key Count"
+    range_start = 0
+    range_end = 8
+    default = 3
+
 class BaseStatTotalRandomness(Choice):
     """
     Controls the level of randomness for Pokemon BST. Stat distribution per Pokemon will follow a randomly selected distribution curve.
@@ -299,6 +308,7 @@ class RentalListShufflePikaCup(Choice):
 class PokemonStadiumOptions(PerGameCommonOptions):
     VictoryCondition:           VictoryCondition
     BadgeRequirement:           BadgeRequirement
+    StartingKeyCount:           StartingKeyCount
     BaseStatTotalRandomness:    BaseStatTotalRandomness
     Trainersanity:              Trainersanity
     GymCastleTrainerRandomness: GymCastleTrainerRandomness
@@ -325,6 +335,7 @@ pokemon_stadium_option_groups: Dict[str, List[Any]] = {
     "General Options": [
         VictoryCondition,
         BadgeRequirement,
+        StartingKeyCount,
         BaseStatTotalRandomness,
         Trainersanity,  
     ],
