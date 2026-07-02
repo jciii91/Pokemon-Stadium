@@ -99,7 +99,7 @@ def set_glc_trainersanity_rules(world: 'PokemonStadiumWorld', player: int, gym_n
     item = f'{gym_name} City Key' if gym_name != 'Cinnabar' else f'{gym_name} Island Key'
     for i, trainer in enumerate(trainers):
         location = f'{gym_name} Gym - {trainer}'
-        set_rule(world.multiworld.get_location(location, player), lambda state: state.count(item, player) > i)
+        set_rule(world.multiworld.get_location(location, player), lambda state: state.has(item, player))
 
 
 def set_cup_trainersanity_rules(world: 'PokemonStadiumWorld', player: int, cup_name: str, trainers: List[str]):

@@ -92,7 +92,9 @@ class Randomizer():
             offset += 23
 
 
-    def write_pokemon_bytes(self, patch, offset, dex_index, pokemon, factor, level) -> None:
+    def write_pokemon_bytes(self, patch, external_offset, dex_index, pokemon, factor, level, location) -> int:
+        offset = external_offset
+
         pokedex_num = dex_index + 1
         patch.write_token(APTokenTypes.WRITE, offset, bytes([pokedex_num]))  # Write Pokémon index
         offset += 1
@@ -106,8 +108,12 @@ class Randomizer():
         offset += 1  # Seek forward by 1 byte
 
         # Random moveset
-        bst = self.bst_list[dex_index]
-        new_attacks = randomMovesetGenerator.MovesetGenerator.get_random_moveset(bst, factor, new_type)
+        if factor > 1 or location == "Trainer":
+            bst = self.bst_list[dex_index]
+            new_attacks = randomMovesetGenerator.MovesetGenerator.get_random_moveset(bst, factor, new_type)
+        else:
+            new_attacks = vanilla_movesets[dex_index][location]
+
         for attack in new_attacks:
             patch.write_token(APTokenTypes.WRITE, offset, bytes([attack]))
             offset += 1
@@ -120,20 +126,31 @@ class Randomizer():
         patch.write_token(APTokenTypes.WRITE, offset, exp)
         offset += 3
 
-        for t in range(5):
-            ev = int.to_bytes(self.evs[dex_index][t], 2, "big")
-            patch.write_token(APTokenTypes.WRITE, offset, ev)
-            offset += 2
+        # Random EVs and IVs
+        if factor > 1:
+            for t in range(5):
+                ev = int.to_bytes(self.evs[dex_index][t], 2, "big")
+                patch.write_token(APTokenTypes.WRITE, offset, ev)
+                offset += 2
 
-        ivs_bytes = bytes.fromhex(self.ivs[dex_index])
-        patch.write_token(APTokenTypes.WRITE, offset, ivs_bytes)
-        offset += len(ivs_bytes)
+            ivs_bytes = bytes.fromhex(self.ivs[dex_index])
+            patch.write_token(APTokenTypes.WRITE, offset, ivs_bytes)
+            offset += len(ivs_bytes)
+        else:
+            offset += 10
+
+            int_set = [0, 0, 0, 0]
+            iv_hex = ""
+            for integer in int_set:
+                iv_hex = iv_hex + hex(integer)[2:]
+            ivs_bytes = bytes.fromhex(self.ivs[dex_index])
+            offset += len(ivs_bytes)
 
         offset += 6  # Seek forward by 6 bytes
 
         new_stats = self.new_display_stats[dex_index]
-        evs = self.evs[dex_index]
-        ivs = self.ivs[dex_index]
+        evs = self.evs[dex_index] if factor > 1 else [0, 0, 0, 0, 0]
+        ivs = self.ivs[dex_index] if factor > 1 else "000000"
         disp = writeDisplayData.DisplayDataWriter.write_gym_tower_display(new_stats, evs, ivs, level)
         patch.write_token(APTokenTypes.WRITE, offset, bytes(disp))
         offset += len(disp)
@@ -158,6 +175,8 @@ class Randomizer():
             patch.write_token(APTokenTypes.WRITE, offset, b"\x00" * blanks)
             offset += blanks
 
+        return offset
+
 
     def randomize_glc_trainer_pokemon_round1(self, patch) -> None:
         offset = rom_offsets[self.version]["GymCastle_Round1"]
@@ -165,12 +184,11 @@ class Randomizer():
             team_count = 4 if q < 9 else 7
             for _ in range(team_count):
                 new_team = random.sample(range(149), 6)
-                for s in range(6):
-                    dex_index = new_team[s]
+                for dex_index in new_team:
                     pokemon = kanto_dex_names[dex_index]
                     factor = self.glc_trainer_factor
                     level = 50
-                    self.write_pokemon_bytes(patch, offset, dex_index, pokemon, factor, level)
+                    offset = self.write_pokemon_bytes(patch, offset, dex_index, pokemon, factor, level, "Trainer")
 
                     offset += 25  # Seek forward by 25 bytes
                 offset += 56  # Seek forward by 56 bytes
@@ -195,7 +213,7 @@ class Randomizer():
                     else:
                         level = pokecupr1_master_levels[_][s]
 
-                    self.write_pokemon_bytes(patch, offset, dex_index, pokemon, factor, level)
+                    offset = self.write_pokemon_bytes(patch, offset, dex_index, pokemon, factor, level, "Trainer")
 
                     offset += 25  # Seek forward by 25 bytes
                 offset += 56  # Seek forward by 56 bytes
@@ -213,7 +231,7 @@ class Randomizer():
                     pokemon = kanto_dex_names[dex_index]
                     factor = self.primecup_trainer_factor
                     level = 100
-                    self.write_pokemon_bytes(patch, offset, dex_index, pokemon, factor, level)
+                    offset = self.write_pokemon_bytes(patch, offset, dex_index, pokemon, factor, level, "Trainer")
 
                     offset += 25  # Seek forward by 25 bytes
                 offset += 56  # Seek forward by 56 bytes
@@ -230,7 +248,7 @@ class Randomizer():
                 pokemon = kanto_dex_names[dex_index]
                 factor = self.petitcup_trainer_factor
                 level = petitcupr1_levels[_][s]
-                self.write_pokemon_bytes(patch, offset, dex_index, pokemon, factor, level)
+                offset = self.write_pokemon_bytes(patch, offset, dex_index, pokemon, factor, level, "Trainer")
 
                 offset += 25  # Seek forward by 25 bytes
             offset += 56  # Seek forward by 56 bytes
@@ -247,54 +265,17 @@ class Randomizer():
                 pokemon = kanto_dex_names[dex_index]
                 factor = self.pikacup_trainer_factor
                 level = pikacupr1_levels[_][s]
-                self.write_pokemon_bytes(patch, offset, dex_index, pokemon, factor, level)
+                offset = self.write_pokemon_bytes(patch, offset, dex_index, pokemon, factor, level, "Trainer")
 
                 offset += 25  # Seek forward by 25 bytes
             offset += 56  # Seek forward by 56 bytes
         offset += 16  # Seek forward by 16 bytes
 
 
-    def write_rental_pokemon_bytes(self, patch, offset, index, factor, level) -> None:
-        offset += 9
-
-        # Random moveset
-        bst_list = self.bst_list[index]
-        type_bytes = bytes.fromhex(kanto_dex_names[index]["type"])
-        new_attacks = randomMovesetGenerator.MovesetGenerator.get_random_moveset(bst_list, factor, type_bytes)
-        for attack in new_attacks:
-            patch.write_token(APTokenTypes.WRITE, offset, bytes([attack]))
-            offset += 1
-
-        offset += 4
-
-        growth_rate = kanto_dex_names[index]["gr"]
-        exp_for_level = growth_rates[growth_rate][level]
-        exp_bytes = int.to_bytes(int(exp_for_level), 3, "big")
-        patch.write_token(APTokenTypes.WRITE, offset, exp_bytes)
-        offset += 3
-
-        for k in range(5):
-            ev = int.to_bytes(self.evs[index][k], 2, "big")
-            patch.write_token(APTokenTypes.WRITE, offset, bytes(ev))
-            offset += 2
-
-        ivs_bytes = bytes.fromhex(self.ivs[index])
-        patch.write_token(APTokenTypes.WRITE, offset, ivs_bytes)
-        offset += len(ivs_bytes)
-
-        offset += 6
-
-        stats = self.new_display_stats[index]
-        evs = self.evs[index]
-        ivs = self.ivs[index]
-        disp = writeDisplayData.DisplayDataWriter.write_gym_tower_display(stats, evs, ivs, level)
-        patch.write_token(APTokenTypes.WRITE, offset, bytes(disp))
-        offset += len(disp)
-
-        offset += 36
-
-
     def randomize_glc_rentals_round1(self, patch) -> None:
+        if self.glc_rental_factor == 1 and self.rental_list_shuffle_factor == 1 and self.rls_glc_factor == 1:
+            return
+
         offset = rom_offsets[self.version]["Rentals_GymCastle_Round1"] + 4
         factor = self.glc_rental_factor
 
@@ -303,10 +284,15 @@ class Randomizer():
             random.shuffle(glc_indexes)
 
         for index in glc_indexes:
-            self.write_rental_pokemon_bytes(patch, offset, index, factor, 50)
+            pokemon = kanto_dex_names[index]
+            offset = self.write_pokemon_bytes(patch, offset, index, pokemon, factor, 50, "GLC")
+            offset += 25
 
 
     def randomize_pokecup_rentals(self, patch) -> None:
+        if self.pokecup_rental_factor == 1 and self.rental_list_shuffle_factor == 1 and self.rls_poke_factor == 1:
+            return
+
         offset = rom_offsets[self.version]["Rentals_PokeCup"] + 4
         factor = self.pokecup_rental_factor
 
@@ -315,10 +301,15 @@ class Randomizer():
             random.shuffle(pokecup_indexes)
 
         for index in pokecup_indexes:
-            self.write_rental_pokemon_bytes(patch, offset, index, factor, 50)
+            pokemon = kanto_dex_names[index]
+            offset = self.write_pokemon_bytes(patch, offset, index, pokemon, factor, 50, "PokeCup")
+            offset += 25
 
 
     def randomize_primecup_rentals_round1(self, patch) -> None:
+        if self.primecup_rental_factor == 1 and self.rental_list_shuffle_factor == 1 and self.rls_prime_factor == 1:
+            return
+
         offset = rom_offsets[self.version]["Rentals_PrimeCup_Round1"] + 4
         factor = self.primecup_rental_factor
 
@@ -327,10 +318,15 @@ class Randomizer():
             random.shuffle(prime_cup_indexes)
 
         for index in prime_cup_indexes:
-            self.write_rental_pokemon_bytes(patch, offset, index, factor, 100)
+            pokemon = kanto_dex_names[index]
+            offset = self.write_pokemon_bytes(patch, offset, index, pokemon, factor, 100, "PrimeCup")
+            offset += 25
 
 
     def randomize_petitcup_rentals(self, patch) -> None:
+        if self.petitcup_rental_factor == 1 and self.rental_list_shuffle_factor == 1 and self.rls_petit_factor == 1:
+            return
+
         offset = rom_offsets[self.version]["Rentals_PetitCup"] + 4
         factor = self.petitcup_rental_factor
 
@@ -338,10 +334,15 @@ class Randomizer():
             random.shuffle(petit_cup_indexes)
 
         for index in petit_cup_indexes:
-            self.write_rental_pokemon_bytes(patch, offset, index, factor, 25)
+            pokemon = kanto_dex_names[index]
+            offset = self.write_pokemon_bytes(patch, offset, index, pokemon, factor, 25, "PetitCup")
+            offset += 25
 
 
     def randomize_pikacup_rentals(self, patch) -> None:
+        if self.pikacup_rental_factor == 1 and self.rental_list_shuffle_factor == 1 and self.rls_pika_factor == 1:
+            return
+
         offset = rom_offsets[self.version]["Rentals_PikaCup"] + 4
         factor = self.pikacup_rental_factor
 
@@ -349,4 +350,6 @@ class Randomizer():
             random.shuffle(pika_cup_indexes)
 
         for index in pika_cup_indexes:
-            self.write_rental_pokemon_bytes(patch, offset, index, factor, 15)
+            pokemon = kanto_dex_names[index]
+            offset = self.write_pokemon_bytes(patch, offset, index, pokemon, factor, 15, "PikaCup")
+            offset += 25

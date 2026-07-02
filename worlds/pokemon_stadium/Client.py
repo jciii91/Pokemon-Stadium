@@ -92,6 +92,8 @@ class PokemonStadiumClient(BizHawkClient):
                 # If a Gym Leader was beaten or the last trainer for a Cup was beaten an additional check must be sent
                 if mode == 7 and trainer_index == 4:
                     locations_to_check = set([ap_code, ap_code + 1])
+                elif mode == 7 and gym_number == 9: # Rival beaten
+                    locations_to_check = set([20000001])
                 elif trainer_index == 8:
                     locations_to_check = set([ap_code, ap_code - trainer_index, ap_code + 1])
                 else:
@@ -149,7 +151,7 @@ class PokemonStadiumClient(BizHawkClient):
 
             # Count badges obtained
             badge_count = sum(1 for badge_code in gym_badge_codes if badge_code in item_codes)
-            badge_requirement = ctx.slot_data.get("badge_requirement", 8)  # Default to 8 if not provided
+            badge_requirement = ctx.slot_data["options"]["BadgeRequirement"]
             victory_road_open = badge_count >= badge_requirement
             if victory_road_open:
                 self.unlocked_gyms.append(9)
@@ -184,7 +186,7 @@ class PokemonStadiumClient(BizHawkClient):
 
             if gym_codes[7] in item_codes:
                 await bizhawk.write(ctx.bizhawk_ctx, [(self.GLC_UNLOCK_FLAGS[7], [0x00, 0x01], 'RDRAM')])
-                await self.update_giovanni_cursor(ctx, item_codes)
+                await self.update_giovanni_cursor(ctx, victory_road_open)
 
             if victory_road_open:
                 await bizhawk.write(ctx.bizhawk_ctx, [(self.GLC_UNLOCK_FLAGS[8], [0x01], 'RDRAM')])
@@ -198,12 +200,6 @@ class PokemonStadiumClient(BizHawkClient):
             await bizhawk.write(ctx.bizhawk_ctx, [(0x146F38, [0x52, 0x61, 0xFF, 0x82], 'RDRAM')])
         elif glc_flag != 2 and self.glc_loaded:
             self.glc_loaded = False
-
-        # Check if Rival cleared. #TODO include this in the GLC clears above
-        text = flags[2].decode("ascii", errors="ignore")
-        if text == 'Magnificent!':
-            await ctx.check_locations(set([event_locations['Beat Rival'].ap_code]))
-            await bizhawk.write(ctx.bizhawk_ctx, [(0x420010, [0x00, 0x00, 0x00, 0x00], 'RDRAM')])
 
         cups_flag = int.from_bytes(flags[18], byteorder='big')
         if cups_flag != 0 and not self.cups_loaded:
@@ -427,9 +423,9 @@ class PokemonStadiumClient(BizHawkClient):
 
         await bizhawk.write(ctx.bizhawk_ctx, [(self.GLC_CURSOR_TARGETS[6], [0x00, down, left, right], 'RDRAM')])
 
-    async def update_giovanni_cursor(self, ctx, item_codes):
-        # Determine UP: All badges obtained?
-        up = 9 if set(gym_badge_codes).issubset(item_codes) else 0
+    async def update_giovanni_cursor(self, ctx, victory_road_open):
+        # Determine UP: Required badges obtained?
+        up = 9 if victory_road_open else 0
 
         # Determine DOWN: highest unlocked gym from 5 to 1
         down = self.highest_unlocked_from(5)
@@ -444,7 +440,7 @@ class PokemonStadiumClient(BizHawkClient):
         elif sabrina_unlocked:
             left = 6
 
-        # Determine RIGHT: All badges obtained?
+        # Determine RIGHT: Required badges obtained?
         right = up
 
         await bizhawk.write(ctx.bizhawk_ctx, [(self.GLC_CURSOR_TARGETS[7], [up, down, left, right], 'RDRAM')])

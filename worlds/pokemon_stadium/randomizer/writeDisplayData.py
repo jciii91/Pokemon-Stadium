@@ -2,6 +2,7 @@ import math
 
 from . import util
 
+
 class DisplayDataWriter:
     @staticmethod
     def write_gym_tower_display(new_display_stats_set, evs, iv_str, lvl):
