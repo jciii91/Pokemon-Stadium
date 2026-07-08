@@ -160,11 +160,11 @@ class Randomizer():
         offset += len(pokemon_name)
 
         # Check if a Nidoran is being written in to add their gender symbol
-        if pokedex_num == 28:
+        if pokedex_num == 29:
             patch.write_token(APTokenTypes.WRITE, offset, bytes.fromhex("BE")) # Female symbol
             offset += 1
             pokemon_name += b" "
-        elif pokedex_num == 31:
+        elif pokedex_num == 32:
             patch.write_token(APTokenTypes.WRITE, offset, bytes.fromhex("A9")) # Male symbol
             offset += 1
             pokemon_name += b" "
