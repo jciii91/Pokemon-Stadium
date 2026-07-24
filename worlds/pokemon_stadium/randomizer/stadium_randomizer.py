@@ -1,4 +1,5 @@
-import random
+from random import Random
+from typing import Sequence
 
 from worlds.Files import APTokenTypes
 
@@ -22,9 +23,12 @@ from . import writeDisplayData
 NOP = bytes([0x00,0x00,0x00,0x00])
 
 class Randomizer():
-    def __init__(self, version="US_1.0", bst_factor=1, glc_trainer_factor=1, pokecup_trainer_factor=1, primecup_trainer_factor=1, petitcup_trainer_factor=1,
+    def __init__(self, seed=None, version="US_1.0", bst_factor=1, glc_trainer_factor=1, pokecup_trainer_factor=1, primecup_trainer_factor=1, petitcup_trainer_factor=1,
                  pikacup_trainer_factor=1, glc_rental_factor=1, pokecup_rental_factor=1, primecup_rental_factor=1, petitcup_rental_factor=1, pikacup_rental_factor=1,
                  rental_list_shuffle_factor=1, rls_glc_factor=1, rls_poke_factor=1, rls_prime_factor=1, rls_petit_factor=1, rls_pika_factor=1):
+        self.seed = seed
+        self.random = Random(seed)
+
         self.version = version
         self.bst_factor = bst_factor
         self.glc_trainer_factor = glc_trainer_factor
@@ -46,15 +50,18 @@ class Randomizer():
 
         self.evs = []
         self.ivs = []
-        for _ in range(0, 149):
-            self.evs.append(util.Util.random_int_set(0, 65535, 5))
-            self.ivs.append(util.Util.random_string_hex(4))
+        for i in range(0, 151):
+            if seed:
+                seed = seed + str(i)
+
+            self.evs.append(util.Util.random_int_set(0, 65535, 5, seed=seed))
+            self.ivs.append(util.Util.random_string_hex(4, seed=seed))
 
         self.new_display_stats = []
         self.bst_list = []
 
         if(bst_factor == 1):
-            for i in range(149):
+            for i in range(151):
                 stats = kanto_dex_names[i]['bst']
                 self.bst_list.append(stats)
                 self.new_display_stats.append(stats)
@@ -70,10 +77,10 @@ class Randomizer():
 
     def randomize_base_stats(self, patch) -> None:
         offset = rom_offsets[self.version]["BaseStats"]
-        for i in range(149):
+        for i in range(151):
             stats = kanto_dex_names[i]['bst']
             if self.bst_factor > 1:
-                randomized_base_stats = BaseValuesRandomizer.randomize_stats(stats, self.bst_factor)
+                randomized_base_stats = BaseValuesRandomizer.randomize_stats(stats, self.bst_factor, seed=self.seed)
 
                 # Convert to list of integers for BST processing
                 self.bst_list.append(list(randomized_base_stats))
@@ -110,7 +117,7 @@ class Randomizer():
         # Random moveset
         if factor > 1 or location == "Trainer":
             bst = self.bst_list[dex_index]
-            new_attacks = randomMovesetGenerator.MovesetGenerator.get_random_moveset(bst, factor, new_type)
+            new_attacks = randomMovesetGenerator.MovesetGenerator.get_random_moveset(bst, factor, new_type, seed=self.seed)
         else:
             new_attacks = vanilla_movesets[dex_index][location]
 
@@ -178,12 +185,63 @@ class Randomizer():
         return offset
 
 
+    def get_pokemon_bytes(self, dex_index, pokemon, factor, level) -> Sequence[int]:
+        pokemon_bytes = []
+        factor = 2 if factor < 2 else factor
+
+        pokedex_num = dex_index + 1
+        pokemon_bytes.append(pokedex_num)
+        pokemon_bytes.extend([0,0,0,level,0]) # Pad 5 bytes, write level
+
+        new_type = bytes.fromhex(pokemon["type"])
+        pokemon_bytes.extend(new_type)  # Pokémon type
+        pokemon_bytes.extend([0])  # Pad 1 byte
+
+        # Random moveset
+        bst = self.bst_list[dex_index]
+        new_attacks = randomMovesetGenerator.MovesetGenerator.get_random_moveset(bst, factor, new_type, seed=self.seed)
+
+        for attack in new_attacks:
+            pokemon_bytes.append(attack)
+
+        pokemon_bytes.extend([0,0,0,0])  # Pad 4 bytes
+
+        growth_rate = pokemon["gr"]
+        exp_for_level = growth_rates[growth_rate][level]
+        exp = int.to_bytes(int(exp_for_level), 3, "big")
+        pokemon_bytes.extend(exp)
+
+        # Random EVs and IVs
+        for t in range(5):
+            ev = int.to_bytes(self.evs[dex_index][t], 2, "big")
+            pokemon_bytes.extend(ev)
+
+        ivs_bytes = bytes.fromhex(self.ivs[dex_index])
+        pokemon_bytes.extend(ivs_bytes)
+        pokemon_bytes.extend([0,0,0,0,level,0])  # Pad 6 bytes
+
+        new_stats = self.new_display_stats[dex_index]
+        evs = self.evs[dex_index] if factor > 1 else [0, 0, 0, 0, 0]
+        ivs = self.ivs[dex_index] if factor > 1 else "000000"
+        disp = writeDisplayData.DisplayDataWriter.write_gym_tower_display(new_stats, evs, ivs, level)
+        pokemon_bytes.extend(disp)
+
+        pokemon_name = pokemon["name"].encode()
+        pokemon_bytes.extend(pokemon_name)
+
+        # Fill in blank spaces to make the name 11 bytes long
+        if len(pokemon_name) < 11:
+            blanks = 11 - len(pokemon_name)
+            pokemon_bytes.extend([0] * blanks)
+
+        return pokemon_bytes
+
     def randomize_glc_trainer_pokemon_round1(self, patch) -> None:
         offset = rom_offsets[self.version]["GymCastle_Round1"]
         for q in range(10):
             team_count = 4 if q < 9 else 7
             for _ in range(team_count):
-                new_team = random.sample(range(149), 6)
+                new_team = self.random.sample(range(149), 6)
                 for dex_index in new_team:
                     pokemon = kanto_dex_names[dex_index]
                     factor = self.glc_trainer_factor
@@ -200,7 +258,7 @@ class Randomizer():
         for q in range(4):
             team_count = 8 
             for _ in range(team_count):
-                new_team = random.sample(range(149), 6)
+                new_team = self.random.sample(range(149), 6)
                 for s in range(6):
                     dex_index = new_team[s]
                     pokemon = kanto_dex_names[dex_index]
@@ -225,7 +283,7 @@ class Randomizer():
         for q in range(4):
             team_count = 8
             for _ in range(team_count):
-                new_team = random.sample(range(149), 6)
+                new_team = self.random.sample(range(149), 6)
                 for s in range(6):
                     dex_index = new_team[s]
                     pokemon = kanto_dex_names[dex_index]
@@ -242,7 +300,7 @@ class Randomizer():
         offset = rom_offsets[self.version]["PetitCup_Round1"]
         team_count = 8
         for _ in range(team_count):
-            new_team = random.sample(petit_cup_indexes, 6)
+            new_team = self.random.sample(petit_cup_indexes, 6)
             for s in range(6):
                 dex_index = new_team[s]
                 pokemon = kanto_dex_names[dex_index]
@@ -259,7 +317,7 @@ class Randomizer():
         offset = rom_offsets[self.version]["PikaCup_Round1"]
         team_count = 8
         for _ in range(team_count):
-            new_team = random.sample(pika_cup_indexes, 6)
+            new_team = self.random.sample(pika_cup_indexes, 6)
             for s in range(6):
                 dex_index = new_team[s]
                 pokemon = kanto_dex_names[dex_index]
@@ -281,7 +339,7 @@ class Randomizer():
 
         glc_indexes = list(range(149))
         if self.rental_list_shuffle_factor == 2 or self.rls_glc_factor > 1:
-            random.shuffle(glc_indexes)
+            self.random.shuffle(glc_indexes)
 
         for index in glc_indexes:
             pokemon = kanto_dex_names[index]
@@ -298,7 +356,7 @@ class Randomizer():
 
         pokecup_indexes = list(range(149))
         if self.rental_list_shuffle_factor == 2 or self.rls_poke_factor > 1:
-            random.shuffle(pokecup_indexes)
+            self.random.shuffle(pokecup_indexes)
 
         for index in pokecup_indexes:
             pokemon = kanto_dex_names[index]
@@ -315,7 +373,7 @@ class Randomizer():
 
         prime_cup_indexes = list(range(149))
         if self.rental_list_shuffle_factor == 2 or self.rls_prime_factor > 1:
-            random.shuffle(prime_cup_indexes)
+            self.random.shuffle(prime_cup_indexes)
 
         for index in prime_cup_indexes:
             pokemon = kanto_dex_names[index]
@@ -331,7 +389,7 @@ class Randomizer():
         factor = self.petitcup_rental_factor
 
         if self.rental_list_shuffle_factor == 2 or self.rls_petit_factor > 1:
-            random.shuffle(petit_cup_indexes)
+            self.random.shuffle(petit_cup_indexes)
 
         for index in petit_cup_indexes:
             pokemon = kanto_dex_names[index]
@@ -347,7 +405,7 @@ class Randomizer():
         factor = self.pikacup_rental_factor
 
         if self.rental_list_shuffle_factor == 2 or self.rls_pika_factor > 1:
-            random.shuffle(pika_cup_indexes)
+            self.random.shuffle(pika_cup_indexes)
 
         for index in pika_cup_indexes:
             pokemon = kanto_dex_names[index]

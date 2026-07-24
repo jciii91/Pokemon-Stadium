@@ -70,7 +70,10 @@ def get_type_name(type_num):
 
 class MovesetGenerator:
     @staticmethod
-    def get_random_moveset(bst_list, rando_factor, pkm_type):
+    def get_random_moveset(bst_list, rando_factor, pkm_type, seed=None):
+        if seed is not None:
+            random.seed(seed)
+
         bst = sum(bst_list)
 
         # first type of move is always a damaging move that lines up with higher attacking stat

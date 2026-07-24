@@ -13,13 +13,20 @@ class Util:
         return int((((stat + iv) * 2 + math.floor(math.ceil(math.sqrt(ev)) / 4)) * level)/100) + level + 10
 
     @staticmethod
-    def random_int_set(min_val, max_val, count):
+    def random_int_set(min_val, max_val, count, seed=None):
+        if seed is not None:
+            random.seed(seed)
+
         return random.sample(range(min_val, max_val), count)
 
     @staticmethod
-    def random_string_hex(length):
+    def random_string_hex(length, seed=None):
+        if seed is not None:
+            random.seed(seed)
+
         int_set = random.sample(range(0, 15), length)
         return_hex = ""
         for integer in int_set:
             return_hex = return_hex + hex(integer)[2:]
+
         return return_hex

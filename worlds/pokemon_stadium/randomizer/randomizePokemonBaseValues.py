@@ -4,7 +4,10 @@ from . import constants
 
 class BaseValuesRandomizer:
     @classmethod
-    def randomize_stats(cls, vanilla_stats, random_factor):
+    def randomize_stats(cls, vanilla_stats, random_factor, seed=None):
+        if seed is not None:
+            random.seed(seed)
+
         min_val = 20
         max_val = 235
 

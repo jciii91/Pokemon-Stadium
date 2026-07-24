@@ -24,6 +24,7 @@ def create_itempool(world: 'PokemonStadiumWorld') -> List[Item]:
     elif victory_condition == 3:
         world.multiworld.get_location('Beat Rival and Clear Both Master Ball Cups', world.player).place_locked_item(victory)
 
+    # Place progression items
     for name in pokemon_stadium_items:
         if name != 'Victory' and name not in world.starting_gym_keys:
             item_pool.append(create_item(world, name))
@@ -31,10 +32,15 @@ def create_itempool(world: 'PokemonStadiumWorld') -> List[Item]:
     item_pool += create_multiple_items(world, 'Poké Cup - Tier Upgrade', 3, ItemClassification.progression)
     item_pool += create_multiple_items(world, 'Prime Cup - Tier Upgrade', 3, ItemClassification.progression)
 
+    # Place useful items
     item_pool += create_multiple_items(world, 'GLC PC Box Upgrade', 6, ItemClassification.useful)
     item_pool += create_multiple_items(world, 'Poke Cup PC Box Upgrade', 6, ItemClassification.useful)
     item_pool += create_multiple_items(world, 'Prime Cup PC Box Upgrade', 6, ItemClassification.useful)
 
+    for name in bonus_pokemon_items:
+        item_pool.append(create_item(world, name))
+
+    # Place junk items
     item_pool += create_junk_items(world, get_total_locations(world) - len(item_pool) - 1)
 
     return item_pool
@@ -122,6 +128,11 @@ box_upgrade_items = {
     'Prime Cup PC Box Upgrade' : ItemData(10000103, ItemClassification.useful),
 }
 
+bonus_pokemon_items = {
+    'Mewtwo': ItemData(10000201, ItemClassification.useful),
+    'Mew': ItemData(10000202, ItemClassification.useful),
+}
+
 junk_items = {
     "Pokedoll": ItemData(10000200, ItemClassification.filler, 0),
 }
@@ -134,5 +145,6 @@ item_table = {
     **pokemon_stadium_items,
     **cup_tier_upgrade_items,
     **box_upgrade_items,
+    **bonus_pokemon_items,
     **junk_items,
 }

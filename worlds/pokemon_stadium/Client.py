@@ -1,13 +1,20 @@
 import logging
 from typing import TYPE_CHECKING
 
-from .Items import pokemon_stadium_items, gym_badge_codes, box_upgrade_items, cup_tier_upgrade_items
+from .Items import (
+    pokemon_stadium_items,
+    gym_badge_codes,
+    box_upgrade_items,
+    cup_tier_upgrade_items,
+    bonus_pokemon_items,
+)
 from .Locations import pokemon_stadium_locations, event_locations
 from NetUtils import ClientStatus
-from .Types import LocData
-import Utils
 import worlds._bizhawk as bizhawk
 from worlds._bizhawk.client import BizHawkClient
+
+from .randomizer.stadium_randomizer import Randomizer
+from .randomizer.constants import kanto_dex_names
 
 logger = logging.getLogger('Client')
 
@@ -223,8 +230,12 @@ class PokemonStadiumClient(BizHawkClient):
             item = box_upgrade_items['GLC PC Box Upgrade'].ap_code
             box_count = sum(1 for net_item in ctx.items_received if net_item.item == item)
             table_size = 29 + 20 * box_count
+            bonus_pokemon = [item for item in bonus_pokemon_items.values() if item.ap_code in item_codes]
 
-            await bizhawk.write(ctx.bizhawk_ctx, [(address, [table_size], 'RDRAM')])
+            await bizhawk.write(ctx.bizhawk_ctx, [(address, [table_size + len(bonus_pokemon)], 'RDRAM')])
+
+            if bonus_pokemon:
+                await self.unlock_bonus_pokemon(ctx, item_codes, table_size, address, "GLC")
 
         # Poke Boxes
         selecting_team = flags[10] == b'\x21\x8F\x10'
@@ -234,8 +245,16 @@ class PokemonStadiumClient(BizHawkClient):
             item = box_upgrade_items['Poke Cup PC Box Upgrade'].ap_code
             box_count = sum(1 for net_item in ctx.items_received if net_item.item == item)
             table_size = 29 + 20 * box_count
+            bonus_pokemon = [
+                item for item in bonus_pokemon_items.values()
+                if item.ap_code in item_codes
+                and item.ap_code not in [bonus_pokemon_items["Mewtwo"].ap_code, bonus_pokemon_items["Mew"].ap_code]
+            ]
 
-            await bizhawk.write(ctx.bizhawk_ctx, [(address, [table_size], 'RDRAM')])
+            await bizhawk.write(ctx.bizhawk_ctx, [(address, [table_size + len(bonus_pokemon)], 'RDRAM')])
+
+            if bonus_pokemon:
+                await self.unlock_bonus_pokemon(ctx, item_codes, table_size, address, "Poke")
 
         # Prime Boxes
         selecting_team = flags[12] == b'\x21\x8F\x10'
@@ -245,8 +264,12 @@ class PokemonStadiumClient(BizHawkClient):
             item = box_upgrade_items['Prime Cup PC Box Upgrade'].ap_code
             box_count = sum(1 for net_item in ctx.items_received if net_item.item == item)
             table_size = 29 + 20 * box_count
+            bonus_pokemon = [item for item in bonus_pokemon_items.values() if item.ap_code in item_codes]
 
-            await bizhawk.write(ctx.bizhawk_ctx, [(address, [table_size], 'RDRAM')])
+            await bizhawk.write(ctx.bizhawk_ctx, [(address, [table_size + len(bonus_pokemon)], 'RDRAM')])
+
+            if bonus_pokemon:
+                await self.unlock_bonus_pokemon(ctx, item_codes, table_size, address, "Prime")
 
         poke_cup_prize = pokemon_stadium_locations['Poké Cup - Master Ball - Prize'].ap_code
         prime_cup_prize = pokemon_stadium_locations['Prime Cup - Master Ball - Prize'].ap_code
@@ -444,3 +467,34 @@ class PokemonStadiumClient(BizHawkClient):
         right = up
 
         await bizhawk.write(ctx.bizhawk_ctx, [(self.GLC_CURSOR_TARGETS[7], [up, down, left, right], 'RDRAM')])
+
+    async def unlock_bonus_pokemon(self, ctx, item_codes, table_size, address, location):
+        if location == "GLC":
+            factor = ctx.slot_data["options"]["GymCastleRentalRandomness"]
+        elif location == "Poke":
+            factor = ctx.slot_data["options"]["PokeCupRentalRandomness"]
+        elif location == "Prime":
+            factor = ctx.slot_data["options"]["PrimeCupRentalRandomness"]
+
+        found_mewtwo = bonus_pokemon_items["Mewtwo"].ap_code in item_codes
+        found_mew = bonus_pokemon_items["Mew"].ap_code in item_codes
+        level = 50 if location == "GLC" else 100
+        first_mon_ivs = await bizhawk.read(ctx.bizhawk_ctx, [(0x218F32, 2, 'RDRAM')])
+
+        if found_mewtwo and location in ["GLC", "Prime"]:
+            address += (1 + table_size * 84)
+            seed = f"{ctx.seed_name}_{ctx.slot}_{location}_{first_mon_ivs}_MEWTWO"
+            randomizer = Randomizer(seed=seed)
+            mewtwo_bytes = randomizer.get_pokemon_bytes(149, kanto_dex_names[149], factor, level)
+            await bizhawk.write(ctx.bizhawk_ctx, [(address, mewtwo_bytes, 'RDRAM')])
+
+        if found_mew and location in ["GLC", "Prime"]:
+            if found_mewtwo:
+                address += 84
+            else:
+                address += (1 + table_size * 84)
+
+            seed = f"{ctx.seed_name}_{ctx.slot}_{location}_{first_mon_ivs}_MEW"
+            randomizer = Randomizer(seed=seed)
+            mew_bytes = randomizer.get_pokemon_bytes(150, kanto_dex_names[150], factor, level)
+            await bizhawk.write(ctx.bizhawk_ctx, [(address, mew_bytes, 'RDRAM')])
