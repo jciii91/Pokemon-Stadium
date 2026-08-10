@@ -50,7 +50,7 @@ def set_rules(world: "PokemonStadiumWorld"):
         trainers = ['Rocket', 'Lab Man', 'Cool(M)']
         set_glc_trainersanity_rules(world, player, 'Viridian', trainers)
 
-        trainers = ['Bug Boy', 'Lad', 'Nerd', 'Sailor', 'Jr(F)', 'Jr(M)', 'Lass', 'Pokémaniac']
+        trainers = ['Biker', 'Rocker', 'Juggler', 'Beauty', 'Medium', 'Tamer', 'Psychic', 'Old Man']
         set_cup_trainersanity_rules(world, player, 'Poké', trainers)
 
         trainers = ['Cue Ball', 'Rocket', 'Judoboy', 'Gambler', 'Cool(F)', 'Bird Boy', 'Lab Man', 'Cool(M)']
